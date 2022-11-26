@@ -1,0 +1,25 @@
+"","control","treat1","treat2","sd"
+"Age (mean):",36,35,35,0.58
+"Female (percent)",50.9,50.4,51.4,0.5
+"Male (percent)",49.1,49.6,48.6,0.5
+"Educ: GCSE or less (percent)",11.6,11,13.8,1.47
+"Educ: A-level (percent)",31.9,31.4,30.2,0.87
+"Educ: Undergraduate (percent)",41.3,41,41.6,0.3
+"Educ: Postgraduate (percent)",15.3,16.6,14.5,1.06
+"Ethnicity: White (percent)",86.2,86.3,85.9,0.21
+"Ethnicity: Other (percent)",13.8,13.7,14.1,0.21
+"Income: above mean (30k) (percent)",56.4,54.6,54.9,0.96
+"Party: Conservatives (percent)",16.3,18,21.9,2.87
+"Party: Labour (percent)",10.8,9.3,8.5,1.17
+"Party: Lib Dem (percent)",16.5,18.5,17.1,1.03
+"Party: Green Party (percent)",40.3,39.1,37.3,1.51
+"Party: Other party (percent)",8,9.8,8.4,0.95
+"Party: No party (percent)",8.2,5.3,6.7,1.45
+"EU vote: Leave (percent)",23.9,23.7,24.4,0.36
+"EU vote: Remain (percent)",10.4,11.5,11.9,0.78
+"EU vote: Didn't vote (percent)",65.7,64.8,63.7,1
+"Contact (mean)",-0.01,0.02,0,0.02
+"Knowledge (mean)",0,0.01,-0.01,0.01
+"Trust (mean)",0,-0.04,0.04,0.04
+"Numeracy (mean)",4.14,4.22,4.12,0.05
+"N",1001,921,995,44.56
