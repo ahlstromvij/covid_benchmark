@@ -358,6 +358,39 @@ df$govt_perf_est <- coeftest(m_govt_perf, vcov = m_govt_perf_vcov)[,1]
 df$govt_perf_se <- coeftest(m_govt_perf, vcov = m_govt_perf_vcov)[,2]
 df$govt_perf_p <- coeftest(m_govt_perf, vcov = m_govt_perf_vcov)[,4]
 
+# plot multiple comparison with ggplot
+mult_comp_plot <- tibble(
+  "Comparison" = c("UK-only - Control","Comparative - Control", "Comparative - UK-only"),
+  "Estimate" = c(confint(govt_perf.multcomp)$confint[1,1],
+                 confint(govt_perf.multcomp)$confint[2,1],
+                 confint(govt_perf.multcomp)$confint[3,1]),
+  "lwr" = c(confint(govt_perf.multcomp)$confint[1,2],
+            confint(govt_perf.multcomp)$confint[2,2],
+            confint(govt_perf.multcomp)$confint[3,2]),
+  "upr" = c(confint(govt_perf.multcomp)$confint[1,3],
+            confint(govt_perf.multcomp)$confint[2,3],
+            confint(govt_perf.multcomp)$confint[3,3])
+)
+
+mult_comp_plot$Comparison <- factor(mult_comp_plot$Comparison, levels=c("Comparative - UK-only",
+                                                                        "Comparative - Control",
+                                                                        "UK-only - Control"))
+
+png(file="plots/govperf_multcomp.png", width = 8, height = 6, units = 'in', res = 300)
+mult_comp_plot %>% 
+  ggplot() +
+  aes(x = Comparison, y = Estimate, fill = Comparison) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr),color="black", shape=21) +
+  coord_flip() +
+  ggtitle("Government Performance") +
+  labs(subtitle = "95% CI with robust standard errors") +
+  theme(plot.title = element_text(face = "bold")) +
+  theme(legend.position="none") +
+  xlab("") +
+  ylab("Difference") +
+  geom_hline(yintercept=0, linetype="dashed")
+dev.off()
+
 # untransformed effect
 govt_perf_tbl <- all_data %>% 
   group_by(condition) %>% 
@@ -1156,12 +1189,12 @@ rownames(df3) <- 1:nrow(df3)
 partisan_df <- subset(df3,DV=="govt_partisan")
 rownames(partisan_df) <- 1:nrow(partisan_df)
 partisan_df_treat1 <- partisan_df[c(1,3,5,7,9),]
-partisan_df_treat1$Interaction <- c("Other","Green","Labour","Lib Dem","No party")
+partisan_df_treat1$Interaction <- c("Green","Labour","Lib Dem","No party","Other")
 partisan_df_treat1$Interaction <- factor(partisan_df_treat1$Interaction,
                                          levels=c("No party","Other","Green","Lib Dem","Labour"),
                                          ordered=TRUE)
 partisan_df_treat2 <- partisan_df[c(2,4,6,8,10),]
-partisan_df_treat2$Interaction <- c("Other","Green","Labour","Lib Dem","No party")
+partisan_df_treat2$Interaction <- c("Green","Labour","Lib Dem","No party","Other")
 partisan_df_treat2$Interaction <- factor(partisan_df_treat2$Interaction,
                                          levels=c("No party","Other","Green","Lib Dem","Labour"),
                                          ordered=TRUE)
@@ -1169,12 +1202,13 @@ partisan_df_treat2$Interaction <- factor(partisan_df_treat2$Interaction,
 partisan_df_binary <- partisan_df[c(11,12),]
 partisan_df_binary$Condition <- c("UK-only","Comparative")
 
-
 library(ggplot2)
 library(RColorBrewer)
-partisan_treat1_graph <- ggplot(partisan_df_treat1, aes(x=Interaction, y=Estimate, group=Interaction, color=Interaction)) + 
-  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..)) +
-  geom_hline(yintercept=0, linetype="11", color = "black") +
+partisan_treat1_graph <- partisan_df_treat1 %>% 
+  ggplot() +
+  aes(x=Interaction, y=Estimate, group=Interaction, fill=Interaction) +
+  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..),color="black", shape=21) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black") +
   xlab("Comparison") +
   ylab("Difference (govt. performance scale)") +
   ggtitle("Condition x Partisanship: UK-Only") +
@@ -1188,9 +1222,11 @@ partisan_treat1_graph <- ggplot(partisan_df_treat1, aes(x=Interaction, y=Estimat
   scale_color_manual(values=c("grey", "grey", "#528D6B", "#FAA61A", "#E4003B"))
 partisan_treat1_graph
 
-partisan_treat2_graph <- ggplot(partisan_df_treat2, aes(x=Interaction, y=Estimate, group=Interaction, color=Interaction)) + 
-  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..)) +
-  geom_hline(yintercept=0, linetype="11", color = "black") +
+partisan_treat2_graph <- partisan_df_treat2 %>% 
+  ggplot() +
+  aes(x=Interaction, y=Estimate, group=Interaction, color=Interaction) +
+  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..), fill=c("grey", "grey", "#528D6B", "#FAA61A", "#E4003B"), shape=21) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black") +
   xlab("") +
   ylab("Difference (govt. performance scale)") +
   ggtitle("Condition x Partisanship: Comparative") +
@@ -1212,11 +1248,13 @@ partisanship_graph
 dev.off()
 # print 1600 x 400
 
-partisan_binary_graph <- ggplot(partisan_df_binary, aes(x=Condition, y=Estimate, group=Condition, color=Condition)) + 
-  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..)) +
-  geom_hline(yintercept=0, linetype="11", color = "black") +
+partisan_binary_graph <- partisan_df_binary %>% 
+  ggplot() +
+  aes(x=Condition, y=Estimate, group=Condition, fill=Condition) +
+  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..),color="black", shape=21) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black") +
   xlab("") +
-  ylab("Difference (govt. performance scale)") +
+  ylab("Difference on Government Performance Scale") +
   ggtitle("Condition x Partisanship") +
   labs(subtitle = "Difference in effect for non-Conservatives compared with Conservatives") +
   coord_flip() +
