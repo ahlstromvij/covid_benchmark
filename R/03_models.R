@@ -1206,11 +1206,11 @@ library(ggplot2)
 library(RColorBrewer)
 partisan_treat1_graph <- partisan_df_treat1 %>% 
   ggplot() +
-  aes(x=Interaction, y=Estimate, group=Interaction, fill=Interaction) +
-  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..),color="black", shape=21) +
+  aes(x=Interaction, y=Estimate, group=Interaction) +
+  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..), fill=c("#528D6B", "#E4003B", "#FAA61A", "grey", "grey"), shape=21) +
   geom_hline(yintercept=0, linetype="dashed", color = "black") +
   xlab("Comparison") +
-  ylab("Difference (govt. performance scale)") +
+  ylab("Difference on Government Performance Scale") +
   ggtitle("Condition x Partisanship: UK-Only") +
   labs(subtitle = "Difference in effect compared with Conservatives") +
   coord_flip() +
@@ -1224,11 +1224,11 @@ partisan_treat1_graph
 
 partisan_treat2_graph <- partisan_df_treat2 %>% 
   ggplot() +
-  aes(x=Interaction, y=Estimate, group=Interaction, color=Interaction) +
-  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..), fill=c("grey", "grey", "#528D6B", "#FAA61A", "#E4003B"), shape=21) +
+  aes(x=Interaction, y=Estimate, group=Interaction) +
+  geom_pointrange(aes(ymin=X2.5.., ymax=X97.5..), fill=c("#528D6B", "#E4003B", "#FAA61A", "grey", "grey"), shape=21) +
   geom_hline(yintercept=0, linetype="dashed", color = "black") +
   xlab("") +
-  ylab("Difference (govt. performance scale)") +
+  ylab("Difference on Government Performance Scale") +
   ggtitle("Condition x Partisanship: Comparative") +
   labs(subtitle = "Difference in effect compared with Conservatives") +
   coord_flip() +
@@ -1236,8 +1236,7 @@ partisan_treat2_graph <- partisan_df_treat2 %>%
   theme(legend.position = "none") +
   theme(panel.grid.major = element_line(linetype = "dashed")) +
   theme(panel.grid.minor = element_line(linetype = "dashed")) +
-  theme(plot.title = element_text(face = "bold")) +
-  scale_color_manual(values=c("grey", "grey", "#528D6B", "#FAA61A", "#E4003B"))
+  theme(plot.title = element_text(face = "bold"))
 partisan_treat2_graph
 
 partisanship_graph <- ggarrange(partisan_treat1_graph, partisan_treat2_graph,
