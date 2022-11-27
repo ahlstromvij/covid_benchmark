@@ -391,6 +391,101 @@ mult_comp_plot %>%
   geom_hline(yintercept=0, linetype="dashed")
 dev.off()
 
+# modelled effect for each item
+m_govt_perf_1 <- lm(govt_perform_adapt ~ 
+                    condition +
+                    contact +
+                    know +
+                    numeracy +
+                    trust +
+                    age +
+                    gender +
+                    education +
+                    ethnicity_simple +
+                    income_cat +
+                    partisanship +
+                    eu_ref,
+                  data = all_data)
+summary(m_govt_perf_1)
+
+m_govt_perf_2 <- lm(govt_perform_protecting ~ 
+                      condition +
+                      contact +
+                      know +
+                      numeracy +
+                      trust +
+                      age +
+                      gender +
+                      education +
+                      ethnicity_simple +
+                      income_cat +
+                      partisanship +
+                      eu_ref,
+                    data = all_data)
+summary(m_govt_perf_2)
+
+m_govt_perf_3 <- lm(govt_perform_compared ~ 
+                      condition +
+                      contact +
+                      know +
+                      numeracy +
+                      trust +
+                      age +
+                      gender +
+                      education +
+                      ethnicity_simple +
+                      income_cat +
+                      partisanship +
+                      eu_ref,
+                    data = all_data)
+summary(m_govt_perf_3)
+
+m_govt_perf_1_vcov <- vcovHC(m_govt_perf_1)
+m_govt_perf_2_vcov <- vcovHC(m_govt_perf_2)
+m_govt_perf_3_vcov <- vcovHC(m_govt_perf_3)
+
+sep_items_tbl <- tibble(
+  "Item" = rep(c("Has adapted well to changes",
+             "Has protected UK residents",
+             "Has responded comparatively well"),2),
+  "Condition" = c("UK-only","UK-only","UK-only",
+                  "Comparative","Comparative","Comparative"),
+  "Effect" = c(coeftest(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,1],
+               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+               coeftest(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,1],
+               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1],
+               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1]),
+  "lwr" = c(confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,1],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+            confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,1],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1]),
+  "upr" = c(confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,2],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,2],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,2],
+            confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,2],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,2],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,2])
+)
+
+png(file="plots/govperf_individual.png", width = 12, height = 6, units = 'in', res = 300)
+sep_items_tbl %>% 
+  ggplot() +
+  aes(x = Condition, y = Effect, fill = Condition) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr),color="black", shape=21) +
+  facet_wrap(~Item) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  theme(legend.position="none") +
+  ggtitle("Individual Government Performance Items") +
+  labs(subtitle = "Effect compared to Control; 95% CI with robust standard errors") +
+  theme(plot.title = element_text(face = "bold")) +
+  xlab("") +
+  ylab("Treatment effect on original item scale (1-5)") +
+  coord_flip()
+dev.off()
+
 # untransformed effect
 govt_perf_tbl <- all_data %>% 
   group_by(condition) %>% 
