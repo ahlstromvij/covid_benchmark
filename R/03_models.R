@@ -452,22 +452,22 @@ sep_items_tbl <- tibble(
                   "Comparative","Comparative","Comparative"),
   "Effect" = c(coeftest(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,1],
                coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
-               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+               coeftest(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[2,1],
                coeftest(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,1],
                coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1],
-               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1]),
+               coeftest(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[3,1]),
   "lwr" = c(confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,1],
             confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
-            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+            confint(m_govt_perf_3, vcov = m_govt_perf_2_vcov)[2,1],
             confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,1],
             confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1],
-            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1]),
+            confint(m_govt_perf_3, vcov = m_govt_perf_2_vcov)[3,1]),
   "upr" = c(confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,2],
             confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,2],
-            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,2],
+            confint(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[2,2],
             confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,2],
             confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,2],
-            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,2])
+            confint(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[3,2])
 )
 
 png(file="plots/govperf_individual.png", width = 12, height = 6, units = 'in', res = 300)
