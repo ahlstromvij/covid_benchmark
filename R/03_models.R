@@ -379,6 +379,7 @@ mult_comp_plot$Comparison <- factor(mult_comp_plot$Comparison, levels=c("Compara
 png(file="plots/govperf_multcomp.png", width = 8, height = 6, units = 'in', res = 300)
 mult_comp_plot %>% 
   ggplot() +
+  theme_minimal() +
   aes(x = Comparison, y = Estimate, fill = Comparison) +
   geom_pointrange(aes(ymin=lwr, ymax=upr),color="black", shape=21) +
   coord_flip() +
@@ -473,6 +474,7 @@ sep_items_tbl <- tibble(
 png(file="plots/govperf_individual.png", width = 12, height = 6, units = 'in', res = 300)
 sep_items_tbl %>% 
   ggplot() +
+  theme_minimal() +
   aes(x = Condition, y = Effect, fill = Condition) +
   geom_pointrange(aes(ymin=lwr, ymax=upr),color="black", shape=21) +
   facet_wrap(~Item) +
