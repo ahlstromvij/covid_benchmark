@@ -227,6 +227,9 @@ m_level_concern_0 <- lm(worry ~
                           condition,
                         data = all_data)
 
+m_level_concern_vcov_0 <- vcovHC(m_level_concern_0)
+coeftest(m_level_concern_0, vcov = m_level_concern_vcov_0)
+
 plot(m_level_concern, 1)
 # Used to check the linear relationship assumptions. A horizontal line, without distinct patterns 
 # is an indication for a linear relationship, what is good.
@@ -336,6 +339,9 @@ summary(m_govt_perf)
 m_govt_perf_0 <- lm(govt_perf ~ 
                       condition,
                     data = all_data)
+
+m_govt_perf_vcov_0 <- vcovHC(m_govt_perf_0)
+coeftest(m_govt_perf_0, vcov = m_govt_perf_vcov_0)
 
 par(mfrow = c(2, 2))
 plot(m_govt_perf)
@@ -785,6 +791,9 @@ m_behavior_0 <- lm(behavior ~
                      condition,
                    data = all_data)
 
+m_behavior_vcov_0 <- vcovHC(m_behavior_0)
+coeftest(m_behavior_0, vcov = m_behavior_vcov_0)
+
 par(mfrow = c(2, 2))
 plot(m_behavior)
 
@@ -909,6 +918,9 @@ m_restrict_0 <- lm(restrict ~
                      condition,
                    data = all_data)
 
+m_restrict_0_vcov <- vcovHC(m_restrict_0)
+coeftest(m_restrict_0, vcov = m_restrict_0_vcov)
+
 par(mfrow = c(2, 2))
 plot(m_restrict)
 # Used to check the linear relationship assumptions. A horizontal line, without distinct patterns 
@@ -935,6 +947,9 @@ m_restrict_glm <- glm(restrict_binary ~
                         eu_ref,
                       data = all_data, family = "binomial")
 summary(m_restrict_glm)
+
+m_restrict_glm_vcov <- vcovHC(m_restrict_glm)
+coeftest(m_restrict_glm, vcov = m_restrict_glm_vcov)
 
 # set model and dv
 model <- m_restrict_glm
@@ -1045,6 +1060,9 @@ m_restrict_int_know_glm <- glm(restrict_binary ~
                                data = all_data, family = "binomial")
 summary(m_restrict_int_know_glm)
 
+m_restrict_int_know_glm_vcov <- vcovHC(m_restrict_int_know_glm)
+coeftest(m_restrict_int_know_glm, vcov = m_restrict_int_know_glm_vcov)
+
 # set model and dv
 model <- m_restrict_int_know_glm
 dv <- all_data$restrict_binary
@@ -1132,6 +1150,9 @@ m_restrict_int_contact_glm <- glm(restrict_binary ~
                                     eu_ref,
                                   data = all_data, family = "binomial")
 summary(m_restrict_int_contact_glm)
+
+m_restrict_int_contact_glm_vcov <- vcovHC(m_restrict_int_contact_glm)
+coeftest(m_restrict_int_contact_glm, vcov = m_restrict_int_contact_glm_vcov)
 
 # set model and dv
 model <- m_restrict_int_contact_glm
@@ -1362,75 +1383,3 @@ partisan_binary_graph <- partisan_df_binary %>%
 png(file="plots/partisanship_binary.png", width = 8, height = 6, units = 'in', res = 300)
 partisan_binary_graph
 dev.off()
-
-govt_know_graph <- interact_plot(m_govt_perf_int_know, pred = know, modx = condition, 
-                                 plot.points = FALSE, 
-                                 robust = TRUE,
-                                 interval = FALSE,
-                                 linearity.check = FALSE,
-                                 centered = "none")
-govt_know_graph
-
-behavior_know_graph <- interact_plot(m_behavior_int, pred = know, modx = condition, 
-                                     plot.points = FALSE, 
-                                     robust = TRUE,
-                                     interval = FALSE,
-                                     linearity.check = FALSE,
-                                     centered = "none")
-behavior_know_graph
-
-restrict_know_graph <- interact_plot(m_restrict_int_know, pred = know, modx = condition, 
-                                     plot.points = FALSE, 
-                                     robust = TRUE,
-                                     interval = FALSE,
-                                     linearity.check = FALSE,
-                                     centered = "none")
-restrict_know_graph
-
-knowledge_graph <- ggarrange(govt_know_graph, behavior_know_graph, restrict_know_graph,
-                             ncol = 3, nrow = 1,
-                             common.legend = TRUE, legend = NULL)
-knowledge_graph
-
-govt_trust_graph <- interact_plot(m_govt_perf_int_trust, pred = trust, modx = condition, 
-                                  plot.points = FALSE, 
-                                  robust = TRUE,
-                                  interval = FALSE,
-                                  linearity.check = FALSE,
-                                  centered = "none")
-govt_trust_graph
-
-concern_contact_graph <- interact_plot(m_level_concern_int, pred = contact, modx = condition, 
-                                       plot.points = FALSE, 
-                                       robust = TRUE,
-                                       interval = FALSE,
-                                       linearity.check = FALSE,
-                                       centered = "none")
-concern_contact_graph
-
-behavior_contact_graph <- interact_plot(m_behavior_int_cont, pred = contact, modx = condition, 
-                                        plot.points = FALSE, 
-                                        robust = TRUE,
-                                        interval = FALSE,
-                                        linearity.check = FALSE,
-                                        centered = "none")
-behavior_contact_graph
-
-restrict_contact_graph <- interact_plot(m_restrict_int_contact, pred = contact, modx = condition, 
-                                        plot.points = FALSE, 
-                                        robust = TRUE,
-                                        interval = FALSE,
-                                        linearity.check = FALSE,
-                                        centered = "none")
-restrict_contact_graph
-
-contact_graph <- ggarrange(concern_contact_graph, behavior_contact_graph, restrict_contact_graph,
-                           ncol = 3, nrow = 1,
-                           common.legend = FALSE, legend = NULL)
-contact_graph
-
-heterogeneity_graph <- ggarrange(concern_contact_graph, restrict_contact_graph,
-                                 behavior_know_graph, restrict_know_graph,
-                                 ncol = 2, nrow = 2,
-                                 common.legend = FALSE, legend = NULL)
-heterogeneity_graph
