@@ -209,13 +209,7 @@ df2 <- data.frame(DV=NA,Coef=NA, Est=NA, SE=NA, p=NA)
 
 # Set classes
 all_data$condition <- as.factor(all_data$condition)
-class(all_data$age)
-summary(all_data$age)
-table(all_data$age)
-
 all_data$gender <- as.factor(all_data$gender)
-
-table(all_data$education)
 all_data$education <- dplyr::recode(all_data$education, 
                                     "A-level (or equivalent)" = "A-level",
                                     "GCSE (or equivalent)" = "GCSE_or_below",
@@ -223,20 +217,11 @@ all_data$education <- dplyr::recode(all_data$education,
                                     "Postgraduate degree (e.g., MA, MSc, PhD)" = "Postgrad",
                                     "Undergraduate degree (e.g., BA)" = "Undergrad")
 all_data$education <- as.factor(all_data$education)
-table(all_data$education)
 all_data <- within(all_data, education <- relevel(education, ref = "A-level"))
-
-table(all_data$ethnicity)
-table(all_data$ethnicity_simple)
 all_data <- within(all_data, ethnicity_simple <- relevel(factor(ethnicity_simple), ref = "White"))
-
-class(all_data$income)
-summary(all_data$income)
 all_data$income_cat <- NA
 all_data$income_cat <- ifelse(all_data$income<=3, 0, 1)
 all_data$income_cat <- as.factor(all_data$income_cat)
-
-table(all_data$partisanship)
 all_data$partisanship <- dplyr::recode(all_data$partisanship, 
                                        "Brexit Party" = "Other",
                                        "Conservative Party" = "Cons",
@@ -248,13 +233,10 @@ all_data$partisanship <- dplyr::recode(all_data$partisanship,
                                        "SNP" = "Other",
                                        "UKIP" = "Other")
 all_data$partisanship <- as.factor(all_data$partisanship)
-table(all_data$partisanship)
 all_data <- within(all_data, partisanship <- relevel(partisanship, ref = "Cons"))
 all_data$partisan_binary <- ifelse(all_data$partisanship=="Cons", "Cons", "Other_party")
 all_data$partisan_binary <- as.factor(all_data$partisan_binary)
 all_data <- within(all_data, partisan_binary <- relevel(partisan_binary, ref = "Other_party"))
-
-table(all_data$eu_ref)
 all_data$eu_ref <- dplyr::recode(all_data$eu_ref, 
                                  "I voted Leave" = "Leave",
                                  "I voted Remain" = "Remain",
@@ -647,6 +629,110 @@ m_restrict_int_contact_glm <- glm(restrict_binary ~
 
 m_restrict_int_contact_glm_vcov <- vcovHC(m_restrict_int_contact_glm)
 
+# modelled effect for each item
+m_govt_perf_1 <- lm(govt_perform_adapt ~ 
+                    condition +
+                    contact +
+                    know +
+                    numeracy +
+                    trust +
+                    age +
+                    gender +
+                    education +
+                    ethnicity_simple +
+                    income_cat +
+                    partisanship +
+                    eu_ref,
+                  data = all_data)
+
+m_govt_perf_2 <- lm(govt_perform_protecting ~ 
+                      condition +
+                      contact +
+                      know +
+                      numeracy +
+                      trust +
+                      age +
+                      gender +
+                      education +
+                      ethnicity_simple +
+                      income_cat +
+                      partisanship +
+                      eu_ref,
+                    data = all_data)
+
+m_govt_perf_3 <- lm(govt_perform_compared ~ 
+                      condition +
+                      contact +
+                      know +
+                      numeracy +
+                      trust +
+                      age +
+                      gender +
+                      education +
+                      ethnicity_simple +
+                      income_cat +
+                      partisanship +
+                      eu_ref,
+                    data = all_data)
+
+m_govt_perf_1_vcov <- vcovHC(m_govt_perf_1)
+m_govt_perf_2_vcov <- vcovHC(m_govt_perf_2)
+m_govt_perf_3_vcov <- vcovHC(m_govt_perf_3)
+
+sep_items_tbl <- tibble(
+  "Item" = rep(c("Adapted well to changes",
+             "Protected UK residents",
+             "Responded comparatively well"),2),
+  "Condition" = c("UK-only","UK-only","UK-only",
+                  "Comp.","Comp.","Comp."),
+  "Effect" = c(coeftest(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,1],
+               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+               coeftest(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[2,1],
+               coeftest(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,1],
+               coeftest(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1],
+               coeftest(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[3,1]),
+  "lwr" = c(confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,1],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,1],
+            confint(m_govt_perf_3, vcov = m_govt_perf_2_vcov)[2,1],
+            confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,1],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,1],
+            confint(m_govt_perf_3, vcov = m_govt_perf_2_vcov)[3,1]),
+  "upr" = c(confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[2,2],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[2,2],
+            confint(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[2,2],
+            confint(m_govt_perf_1, vcov = m_govt_perf_1_vcov)[3,2],
+            confint(m_govt_perf_2, vcov = m_govt_perf_2_vcov)[3,2],
+            confint(m_govt_perf_3, vcov = m_govt_perf_3_vcov)[3,2])
+)
+
+all_data <- within(all_data, partisan_binary <- relevel(partisan_binary, ref = "Cons"))
+m_govt_perf_int_part_bin <- lm(govt_perf ~ 
+                             condition +
+                             condition:partisan_binary +
+                             contact +
+                             know +
+                             numeracy +
+                             trust +
+                             age +
+                             gender +
+                             education +
+                             ethnicity_simple +
+                             income_cat +
+                             partisan_binary +
+                             eu_ref,
+                           data = all_data)
+
+m_govt_perf_int_part_bin_vcov <- vcovHC(m_govt_perf_int_part_bin)
+
+partisan_binary_tbl <- tibble(
+  "Condition" = c("UK-only","Comp."),
+  "Estimate" = c(coeftest(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)[18,1],
+                 coeftest(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)[19,1]),
+  "lwr" = c(confint(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)[18,1],
+            confint(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)[19,1]),
+  "upr" = c(confint(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)[18,2],
+            confint(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)[19,2])
+  )
 ```
 
 ```{r tab3, echo=FALSE, results='asis'}
@@ -925,5 +1011,35 @@ texreg::texreg(list(m_govt_perf_0, m_behavior_0, m_level_concern_0, m_restrict_0
                stars = c(0.001, 0.01, 0.05, 0.1),
                custom.coef.names = c("(Intercept)", "Cond.: UK-Only", "Cond.: 
                                      Comp."),
-               label="tab3",
+               label="tab9",
                digits=3)
+```
+
+```{r fig2, fig.cap="Individual Government Performance Items: Effect compared to Control (95 percent CIs with robust SEs)", echo=FALSE, message = FALSE}
+sep_items_tbl %>% 
+  ggplot() +
+  theme_minimal() +
+  aes(x = Condition, y = Effect, fill = Condition) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr),color="black", shape=21) +
+  facet_wrap(~Item) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  theme(legend.position="none") +
+  xlab("") +
+  ylab("Treatment effect on original item scale (1-5)") +
+  coord_flip()
+```
+
+```{r fig3, fig.cap="Condition x Partisanship: Difference in effect for non-Conservatives compared with Conservatives (95 percent CIs with robust SEs)", echo=FALSE, message = FALSE}
+partisan_binary_graph <- partisan_binary_tbl %>% 
+  ggplot() +
+  aes(x=Condition, y=Estimate, group=Condition, fill=Condition) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr),color="black", shape=21) +
+  geom_hline(yintercept=0, linetype="dashed", color = "black") +
+  xlab("") +
+  ylab("Difference on Government Performance Scale") +
+  coord_flip() +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  theme(panel.grid.major = element_line(linetype = "dashed")) +
+  theme(panel.grid.minor = element_line(linetype = "dashed"))
+partisan_binary_graph
