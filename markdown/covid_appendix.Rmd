@@ -1,0 +1,929 @@
+---
+title: Supporting Information
+#date: "`r Sys.Date()`"
+fontsize: 11pt
+#spacing: halfline # could also be oneline
+#classoptions:
+#  - endnotes
+# abstract: |
+# keywords:
+bibliography: mybibfile.bib
+output: rticles::oup_article
+#header-includes:
+#  - \usepackage[nomarkers,tablesfirst]{endfloat} # For figures and tables at end
+#  - \usepackage{lineno} # For line numbering
+#  - \linenumbers # For line numbering
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE) # By default, hide code; set to TRUE to see code
+knitr::opts_chunk$set(fig.pos = 'h') # Places figures in text
+knitr::opts_chunk$set(out.width = '100%', dpi=300) # Figure resolution and size
+knitr::opts_chunk$set(fig.env="figure") # Latex figure environment
+
+library(tidyverse)
+library(ggplot2)
+library(pscl)
+library(kableExtra)
+library(ggpubr)
+library(stargazer)
+library(texreg)
+library(lmtest)
+library(sandwich)
+
+set.seed(100)
+```
+
+```{r readindata, echo=FALSE}
+# Read in data
+all_data <- readRDS("../data/preprocessed_scales.rds") %>% 
+  as_tibble()
+
+# binarised version of restriction
+all_data$restrict_binary <- ifelse(all_data$restrict<=0, 0, 1)
+all_data$restrict_binary <- as.factor(all_data$restrict_binary)
+```
+
+# IRT model details and diagnostics
+
+In analysing our data, we used scales tapping into the following in our analysis:
+
+1. Subjective numeracy (independent variable)
+2. Trust in government (independent variable)
+3. Knowledge about COVID-19 (independent variable)
+4. Contact with COVID-19 (independent variable)
+5. Support for restrictions (dependent variable)
+6. Willingness to engage in activities (dependent variable)
+7. Level of concern about COVID-19 (dependent variable)
+8. Perceptions of government performance (dependent variable)
+
+2-8 were constructed out of ordinal survey items using item response theory (IRT) modelling. IRT models are used to measure latent traits assumed to fall on a continuous scale. Values on that scale are usually referred to by way of the Greek letter $\theta$ (theta), and taken to range from -$\infty$ to +$\infty$, with a mean of 0 and standard deviation of 1. This means that, while the individual $\theta$ values ascribed to any particular respondent has no intrinsic meaning, it can nevertheless be interpreted relative to an estimated population mean. Subjective numeracy was modelled using the mean response across three established items (more on this below), as per standard practice. Further details are provided below.
+
+A valid IRT model should meet three conditions: 
+
+- unidimensionality (the scale taps into only one dimension/trait), 
+- local independence (items are uncorrelated after conditioning on the measured trait), and 
+- good model fit. 
+
+We evaluated unidimensionality using parallel analysis (where finding no more than 1 factor indicates likely unidimensionality), and local independence using Yen’s (1993) Q3. Yen suggests a screening value of +/-0.2, such that, anything larger than that, is evidence of local dependence. However, as pointed out by de Ayala (2009: 137), that screening value is most appropriate for long scales (35 items or more), as shorter scales like ours can be expected to give higher values. We evaluated model fit by inspecting empirical plots.
+
+In the case of the scales that had not been pre-validated through previous work (i.e., 3-8), we did not know in advance exactly what items would end up making for a valid IRT model. For each scale, only the subset of items that made for a valid IRT models were included, with details provided in subsequent sections. Doing otherwise would risk basing our analysis on flawed models potentially giving us inaccurate estimates.
+
+## Subjective numeracy
+Subjective numeracy was measured with reference to the mean response to the following three items (McNaughton et al. 2015), with participants being asked to indicate on a scale from 1 to 6 whether they considered themselves ‘Not good at all’ (1) or ‘Extremely good’ (6):
+
+1.	How good are you at working with fractions
+2.	How good are you at figuring out how much a shirt will cost if it is 25% off?
+3.	How often do you find numerical information to be useful?
+
+## Trust
+Our trust scale was built from the following items from Devine et al. (2020), with response options ranging from ‘strongly disagree’ (1) to ‘strongly agree’ (5):
+
+1.	The government understands the needs of my community.
+2.	The government usually has good intentions.
+3.	In general, the government usually does the right thing.
+
+Since non-binary response options, we here used a generalized partial credit model, with the R package mirt (Chalmers 2012). The items had good discrimination values (2.116, 2.803, and 4.862), loaded well onto the factor, were well-ordered, and made for a unidimensional scale. By way of scale reliability, the scale discriminated best at around the mean (an approximate information value of 10 in the $\theta$ range of -1.75 to 2). The Q3 values were acceptable (a maximum of -0.591, for items 2 and 3), given the length of the scale.
+
+## Knowledge
+We included the following seven COVID-19 knowledge items in our survey, in each case asking respondents to indicate whether the statement was true or false:
+
+1.	COVID-19 is a virus (false)
+2.	COVID-19 is caused by bacteria (false)
+3.	COVID-19 can be transmitted in areas with hot and humid climate (true)
+4.	There is currently no vaccine to protect against COVID-19 (true)
+5.	Most people who get COVID-19 recover from it (true)
+6.	COVID-19 can be transmitted through mosquito bites (false)
+7.	Antibiotics are effective in preventing and treating COVID-19 (false)
+
+Using the R package mirt (Chalmers 2012) to fit a two-parameter model (2PL), we determined that items 3, 4, and 5 made for a unidimensional scale with acceptable discrimination values (1.240, 1.372, and 1.337, respectively). By way of scale reliability, the test information function showed the scale to discriminate best below the mean (an approximate information of 1 at a $\theta$ of -2). The maximum Q3 value was acceptable (-0.192 between items 3 and 5), as was the model fit.
+
+## Contact
+To measure participants’ contact with COVID-19, we also included the following items in the survey, asking participants to designate whether the statement was true or false in their case:
+
+1.	I have tested positive for coronavirus or for coronavirus antibodies
+2.	I have not been tested, but am highly confident that I either have or have had coronavirus
+3.	Someone I know has tested positive for coronavirus or for coronavirus antibodies
+4.	Someone I know has passed away from a confirmed case of coronavirus
+5.	My job involves treating coronavirus patients, or supporting those who are giving treatment
+
+Using mirt, items 4, 5, and 6 were found to form a unidimensional scale with good discrimination values (1.473, 1.326, and 1.321). By way of scale reliability, the scale discriminated best at and above the mean (an approximate information of 0.9 at a $\theta$ of 1). The maximum Q3 value (-0.239, between items 3 and 4) was acceptable, as was the model fit.
+
+## Support for restrictions
+In measuring support for restrictions, we used the following statements, where participants were asked to tick each item corresponding to a restriction they support:
+
+1.	Quarantining anyone who has been in contact with a contaminated patient
+2.	Temporarily closing schools
+3.	Cancelling large events
+4.	Cancelling routine hospital procedures
+5.	Stopping all inbound international flights from countries with confirmed cases of coronavirus
+6.	Quarantining all inbound international flights from countries with confirmed cases of coronavirus
+7.	Encouraging social distancing of 1 metre
+8.	Requiring wearing masks on public transport
+9.	Requiring wearing masks in all indoor public places
+
+Using mirt, three of the items—3, 7, and 9—were found to have good discrimination values (1.861, 2.400, and 2.112) and made for a unidimensional scale. By way of scale reliability, the scale discriminated best below the mean (an approximate information value of 3 at a $\theta$ value of -1.75), and the maximum Q3 value (-0.277 between 7 and 9) was acceptable since the scale was short, as discussed above.
+
+## Willingness to engage in activities
+To measure participants’ willingness to engage in activities, we used the following items, where participants were asked to tick each item corresponding to an activity they expected to engage in over the coming month:
+
+1.	Going to the hairdressers
+2.	Visiting an indoor museum or exhibition
+3.	Going to bars and restaurants
+4.	Using public toilets
+5.	Using public transport
+6.	Going to indoor cinemas or theatres
+7.	Taking holidays abroad
+8.	Attending places of worship
+9.	Going to indoor gyms/leisure centres/swimming pools
+10.	Going to large public gatherings (sport/music events)
+
+Using a 2PL model in mirt, three of the items (3, 6, and 10) were determined to have good discrimination values (3.452, 1.714, and 2.260) and made for a unidimensional scale. By way of scale reliability, the scale discriminated best around the mean (an information value of about 3.25 for a $\theta$ of 0, with an additional lower peak of around 1.75 for a $\theta$ of 2), and the maximum Q3 value (0.409 between 3 and 6) was acceptable.
+
+## Level of concern
+For level of concern, we presented participants with seven statements, asking them to use a scale from 1-4 to indicate whether they were ‘not worried at all’ (1) or ‘extremely worried’ (4) of the following, with wordings taken from YouGov (2020):
+
+1.	Contracting COVID-19 (the disease caused by coronavirus)
+2.	Becoming seriously unwell or dying
+3.	Friends or family becoming seriously unwell or dying
+4.	Finances being severely affected
+5.	Losing your job
+6.	Your children’s education suffering
+7.	There being a long-lasting negative impact on society
+
+Using a generalized partial credit model in mirt, we found that three of the items (1, 2, and 3) loaded well onto the factor, had good discrimination values (3.740, 4.011, and 1.477), were well-ordered, and made for a scale that was likely unidimensional. By way of scale reliability, the scale discriminated best in the $\theta$ range of -1 to 1 (an approximate information value of 9). The Q3 values was acceptable (a maximum of -0.723, for items 1 and 2), given the length of the scale.
+
+## Perceptions of government performance
+To measure perceptions of government performance, we asked participants to use a scale of 1-5 to indicate whether they ‘strongly disagree’ (1) or ‘strongly agree’ (5) with the following statements, borrowed from Ipsos MORI (2020):
+
+1.	I have found the communication and advice from the UK government helpful.
+2.	The UK government’s advice on how to protect myself and others has been effective.
+3.	The UK government’s response to the coronavirus has been clear and consistent.
+4.	The UK government’s plan has adapted well to the changing scientific information and situation.
+5.	Compared with other countries, the UK government has responded well to the coronavirus outbreak.
+6.	The UK government has done a good job of protecting UK residents through its response to the coronavirus.
+
+Using mirt, we found that three of the items (4, 5, and 6) loaded well, had good discrimination values (2.314, 2.689, and 5.590), were well-ordered, and made for a unidimensional scale. By way of scale reliability, the scale discriminated best in the $\theta$ range of -1 to 2, with an approximate maximum information value of 16 around 0.5. The maximum Q3 value was acceptable (0.589 between items 4 an 6), given the length of the scale.
+
+# Manipulation check
+
+We included a post-treatment manipulation check, asking respondents assigned to either treatment group to indicate whether the image they had previously seen contained “one” or “more than one” country. Fig. \ref{fig:fig1} displays the breakdown by condition. It shows that the manipulation worked as intended: respondents in the UK-only condition overwhelmingly reported seeing one country in the image, while those in the comparative condition reported seeing more than one country. In the main analysis, we excluded respondents who gave a response that was incorrect for their assigned condition. However, we also re-ran the analyses using the full sample (see note 10 in the main body).
+
+```{r fig1, fig.cap="Distribution of responses to the manipulation check by treatment condition", echo=FALSE, message = FALSE}
+manipulation_df <- data.frame(
+  manip = rep(c("One", "More than one"), 2),
+  condition = c("UK-Only", "UK-Only", "Comparative", "Comparative"),
+  part = c(921, 83, 9, 1000),
+  y = c(921/2+83, 83/2, 1000+9+30, 1000/2)
+)
+
+library(dplyr)
+manipulation_df <- manipulation_df %>%
+  arrange(manip) %>%
+  mutate(manip = factor(manip, levels=c("One","More than one")))
+
+library(ggplot2)
+ggplot(manipulation_df, aes(x = condition, y = part))+
+  geom_col(aes(fill = manip), width = 0.7) +
+  ylab("Number of participants") +
+  xlab("Condition") +
+  theme(legend.title = element_blank()) +
+  geom_text(aes(y = y, label = part, group = manip), color = c("white","white","white","black")) +
+  theme_minimal()
+```
+
+# Sample details
+
+Table \ref{tab:tab1} provides details on the distribution of participants across the three conditions along measured variables. Table \ref{tab:tab2} gives details on the achieved proportion and sample targets by gender and ethnicity.
+
+```{r tab1, echo=FALSE}
+# Set up dataframe for main effects coefficients
+df <- data.frame("row" = 1:21, "coefs" = NA, 
+                 "govt_perf_est" = NA, "govt_perf_se" = NA, "govt_perf_p" = NA,
+                 "behavior_est" = NA, "behavior_se" = NA, "behavior_p" = NA,
+                 "concern_est" = NA, "concern_se" = NA, "concern_p" = NA,
+                 "restrict_est" = NA, "restrict_se" = NA, "restrict_p" = NA)
+
+# and for interactions (including linear combinations)
+df2 <- data.frame(DV=NA,Coef=NA, Est=NA, SE=NA, p=NA)
+
+# Set classes
+all_data$condition <- as.factor(all_data$condition)
+class(all_data$age)
+summary(all_data$age)
+table(all_data$age)
+
+all_data$gender <- as.factor(all_data$gender)
+
+table(all_data$education)
+all_data$education <- dplyr::recode(all_data$education, 
+                                    "A-level (or equivalent)" = "A-level",
+                                    "GCSE (or equivalent)" = "GCSE_or_below",
+                                    "No formal education" = "GCSE_or_below",
+                                    "Postgraduate degree (e.g., MA, MSc, PhD)" = "Postgrad",
+                                    "Undergraduate degree (e.g., BA)" = "Undergrad")
+all_data$education <- as.factor(all_data$education)
+table(all_data$education)
+all_data <- within(all_data, education <- relevel(education, ref = "A-level"))
+
+table(all_data$ethnicity)
+table(all_data$ethnicity_simple)
+all_data <- within(all_data, ethnicity_simple <- relevel(factor(ethnicity_simple), ref = "White"))
+
+class(all_data$income)
+summary(all_data$income)
+all_data$income_cat <- NA
+all_data$income_cat <- ifelse(all_data$income<=3, 0, 1)
+all_data$income_cat <- as.factor(all_data$income_cat)
+
+table(all_data$partisanship)
+all_data$partisanship <- dplyr::recode(all_data$partisanship, 
+                                       "Brexit Party" = "Other",
+                                       "Conservative Party" = "Cons",
+                                       "Green Party" = "Green",
+                                       "Liberal Democrats" = "Lib_Dem",
+                                       "No party" = "No_party",
+                                       "Other party" = "Other",
+                                       "Plaid Cymru" = "Other",
+                                       "SNP" = "Other",
+                                       "UKIP" = "Other")
+all_data$partisanship <- as.factor(all_data$partisanship)
+table(all_data$partisanship)
+all_data <- within(all_data, partisanship <- relevel(partisanship, ref = "Cons"))
+all_data$partisan_binary <- ifelse(all_data$partisanship=="Cons", "Cons", "Other_party")
+all_data$partisan_binary <- as.factor(all_data$partisan_binary)
+all_data <- within(all_data, partisan_binary <- relevel(partisan_binary, ref = "Other_party"))
+
+table(all_data$eu_ref)
+all_data$eu_ref <- dplyr::recode(all_data$eu_ref, 
+                                 "I voted Leave" = "Leave",
+                                 "I voted Remain" = "Remain",
+                                 "I was eligible to vote, but did not" = "No_vote",
+                                 "I was not eligible to vote, but would have voted Leave" = "Leave",
+                                 "I was not eligible to vote, but would have voted Remain" = "Remain",
+                                 "I was not eligible to vote, but would not have voted" = "No_vote")
+all_data$eu_ref <- as.factor(all_data$eu_ref)
+all_data <- within(all_data, eu_ref <- relevel(eu_ref, ref = "Leave"))
+
+# Binary/factor coding of terms
+all_data$contact_binary <- ifelse(all_data$contact<=mean(all_data$contact), 0, 1)
+all_data$contact_binary <- as.factor(all_data$contact_binary)
+
+all_data$know_binary <- ifelse(all_data$know<=mean(all_data$know), 0, 1)
+all_data$know_binary <- as.factor(all_data$know_binary)
+
+# Descriptive stats
+age <- round(tapply(all_data$age,all_data$condition,mean),0)
+gender <- round(prop.table(table(all_data$gender,all_data$condition),2)*100,digits=1)
+education <- round(prop.table(table(all_data$education,all_data$condition),2)*100,digits=1)
+education <- education[c(2,1,4,3),]
+ethnicity <- round(prop.table(table(all_data$ethnicity_simple,all_data$condition),2)*100,digits=1)
+income <- round(prop.table(table(all_data$income_cat,all_data$condition),2)*100,digits=1)[2,]
+party <- round(prop.table(table(all_data$partisanship,all_data$condition),2)*100,digits=1)
+party <- party[c(1,4,5,3,2,6),]
+referendum <- round(prop.table(table(all_data$eu_ref,all_data$condition),2)*100,digits=1)
+contact <- round(tapply(all_data$contact,all_data$condition,mean),2)
+know <- round(tapply(all_data$know,all_data$condition,mean),2)
+trust <- round(tapply(all_data$trust,all_data$condition,mean),2)
+numeracy <- round(tapply(all_data$numeracy,all_data$condition,mean),2)
+
+summary_df <- data.frame(rbind(age,gender,education,ethnicity,income,party,referendum,contact,know,trust,numeracy))
+summary_df$sd <- NA
+for(i in 1:length(summary_df$control)){
+  summary_df$sd[i] <- round(sd(summary_df[i,1:3]),digits=2)
+}
+#summary_df[2:21,1:3] <- lapply(summary_df[2:21,1:3], function(x) paste(x,"%",sep=""))
+cond <- table(all_data$condition)
+summary_df <- rbind(summary_df,cond)
+summary_df$sd[24] <- round(sd(summary_df[24,1:3]),digits=2)
+
+row.names(summary_df) <- c("Age (mean):",
+                           "Female (percent)",
+                           "Male (percent)",
+                           "Educ: GCSE or less (percent)",
+                           "Educ: A-level (percent)",
+                           "Educ: Undergraduate (percent)",
+                           "Educ: Postgraduate (percent)",
+                           "Ethnicity: White (percent)",
+                           "Ethnicity: Other (percent)",
+                           "Income: above mean (30k) (percent)",
+                           "Party: Conservatives (percent)",
+                           "Party: Labour (percent)",
+                           "Party: Lib Dem (percent)",
+                           "Party: Green Party (percent)",
+                           "Party: Other party (percent)",
+                           "Party: No party (percent)",
+                           "EU vote: Leave (percent)",
+                           "EU vote: Remain (percent)",
+                           "EU vote: Didn't vote (percent)",
+                           "Contact (mean)",
+                           "Knowledge (mean)",
+                           "Trust (mean)",
+                           "Numeracy (mean)",
+                           "N")
+
+knitr::kable(summary_df,
+             caption="Demographic and other pre-treatment variables by treatment",
+             booktabs=TRUE,
+             linesep = "",
+             escape = FALSE, 
+             label="tab1",
+             col.names = linebreak(c("Control",
+                                     "UK-Only\nTreatment",
+                                     "Comparative\nTreatment",
+                                     "SD"), align = "c"))
+```
+
+```{r tab2, echo=FALSE, results='asis'}
+sample_achieved <- round(prop.table(table(all_data$ethnicity_simple,all_data$gender))*100,digits=1)
+sample_achieved[1,1] <- paste(sample_achieved[1,1],"(44.0)",sep=" ")
+sample_achieved[2,1] <- paste(sample_achieved[2,1],"(7.0)",sep=" ")
+sample_achieved[1,2] <- paste(sample_achieved[1,2],"(42.0)",sep=" ")
+sample_achieved[2,2] <- paste(sample_achieved[2,2],"(7.0)",sep=" ")
+
+knitr::kable(data.frame(Ethnicity = c('White', '\\textit{   Target}', 'Other', '\\textit{   Target}'), 
+                        Female = linebreak(c("44.1","\\textit{44.0}","6.8","\\textit{7.0}")),
+                        Male = linebreak(c("42.1","\\textit{42.0}","7.0","\\textit{7.0}"))),
+             caption="Achieved sample proportions and targets by gender and ethnicity",
+             booktabs=TRUE,
+             linesep = "",
+             escape = FALSE,
+             label="tab2",
+             align=c("l","c","c"))
+```
+
+# Model details
+
+Tables 3-7 provide details on the models used for the analysis. Inspection of diagnostic plots suggested that several of the models exhibited minor problems with non-normally distributed residuals and some heteroscedasticity. Robust standard errors were therefore used, computed with R's `sandwich` package (Zeileis 2004). The three models involving the dependent variable 'Support for restrictions' also exhibited some non-linearity. For that reason, a binary version of that variable was created, with values above the mean coded as 1, and all others as 0, and a corresponding logistic model was fitted for each of these three linear models. These can be found in Table 8. These models do not change the analysis provided in relation to the linear models in the main text.
+
+```{r allmodels, echo=FALSE, results='asis'}
+m_level_concern <- lm(worry ~ 
+                        condition +
+                        contact +
+                        know +
+                        numeracy +
+                        trust +
+                        age +
+                        gender +
+                        education +
+                        ethnicity_simple +
+                        income_cat +
+                        partisanship +
+                        eu_ref,
+                      data = all_data)
+
+m_level_concern_vcov <- vcovHC(m_level_concern)
+
+m_level_concern_0 <- lm(worry ~ 
+                          condition,
+                        data = all_data)
+
+m_level_concern_vcov_0 <- vcovHC(m_level_concern_0)
+
+m_govt_perf <- lm(govt_perf ~ 
+                    condition +
+                    contact +
+                    know +
+                    numeracy +
+                    trust +
+                    age +
+                    gender +
+                    education +
+                    ethnicity_simple +
+                    income_cat +
+                    partisanship +
+                    eu_ref,
+                  data = all_data)
+
+m_govt_perf_vcov <- vcovHC(m_govt_perf)
+
+m_govt_perf_0 <- lm(govt_perf ~ 
+                    condition,
+                  data = all_data)
+
+m_govt_perf_vcov_0 <- vcovHC(m_govt_perf_0)
+
+m_behavior <- lm(behavior ~ 
+                    condition +
+                    contact +
+                    know +
+                    numeracy +
+                    trust +
+                    age +
+                    gender +
+                    education +
+                    ethnicity_simple +
+                    income_cat +
+                    partisanship +
+                    eu_ref,
+                  data = all_data)
+
+m_behavior_vcov <- vcovHC(m_behavior)
+
+m_behavior_0 <- lm(behavior ~ 
+                    condition,
+                  data = all_data)
+
+m_behavior_vcov_0 <- vcovHC(m_behavior_0)
+
+m_restrict <- lm(restrict ~ 
+                   condition +
+                   contact +
+                   know +
+                   numeracy +
+                   numeracy +
+                   trust +
+                   age +
+                   gender +
+                   education +
+                   ethnicity_simple +
+                   income_cat +
+                   partisanship +
+                   eu_ref,
+                  data = all_data)
+
+m_restrict_vcov <- vcovHC(m_restrict)
+
+m_restrict_0 <- lm(restrict ~ 
+                   condition,
+                  data = all_data)
+
+m_restrict_vcov_0 <- vcovHC(m_restrict_0)
+
+m_restrict_glm <- glm(restrict_binary ~ 
+                   condition +
+                   contact +
+                   know +
+                   numeracy +
+                   trust +
+                   age +
+                   gender +
+                   education +
+                   ethnicity_simple +
+                   income_cat +
+                   partisanship +
+                   eu_ref,
+                 data = all_data, family = "binomial")
+
+m_restrict_glm_vcov <- vcovHC(m_restrict_glm)
+
+m_level_concern_int <- lm(worry ~ 
+                            condition +
+                            condition:contact +
+                            contact +
+                            know +
+                            numeracy +
+                            trust +
+                            age +
+                            gender +
+                            education +
+                            ethnicity_simple +
+                            income_cat +
+                            partisanship +
+                            eu_ref,
+                          data = all_data)
+
+m_level_concern_int_vcov <- vcovHC(m_level_concern_int)
+
+m_govt_perf_int_trust <- lm(govt_perf ~ 
+                              condition +
+                              condition:trust +
+                              contact +
+                              know +
+                              numeracy +
+                              trust +
+                              age +
+                              gender +
+                              education +
+                              ethnicity_simple +
+                              income_cat +
+                              partisanship +
+                              eu_ref,
+                            data = all_data)
+
+m_govt_perf_int_trust_vcov <- vcovHC(m_govt_perf_int_trust)
+
+m_govt_perf_int_part <- lm(govt_perf ~ 
+                             condition +
+                             condition:partisanship +
+                             contact +
+                             know +
+                             numeracy +
+                             trust +
+                             age +
+                             gender +
+                             education +
+                             ethnicity_simple +
+                             income_cat +
+                             partisanship +
+                             eu_ref,
+                           data = all_data)
+
+m_govt_perf_int_part_vcov <- vcovHC(m_govt_perf_int_part)
+
+m_govt_perf_int_know <- lm(govt_perf ~ 
+                              condition +
+                              condition:know +
+                              contact +
+                              know +
+                              numeracy +
+                              trust +
+                              age +
+                              gender +
+                              education +
+                              ethnicity_simple +
+                              income_cat +
+                              partisanship +
+                              eu_ref,
+                            data = all_data)
+
+m_govt_perf_int_know_vcov <- vcovHC(m_govt_perf_int_know)
+
+m_behavior_int <- lm(behavior ~ 
+                       condition +
+                       contact +
+                       know +
+                       condition:know +
+                       numeracy +
+                       trust +
+                       age +
+                       gender +
+                       education +
+                       ethnicity_simple +
+                       income_cat +
+                       partisanship +
+                       eu_ref,
+                      data = all_data)
+
+m_behavior_int_vcov <- vcovHC(m_behavior_int)
+
+m_behavior_int_cont <- lm(behavior ~ 
+                             condition +
+                             contact +
+                             know +
+                             condition:contact +
+                             numeracy +
+                             trust +
+                             age +
+                             gender +
+                             education +
+                             ethnicity_simple +
+                             income_cat +
+                             partisanship +
+                             eu_ref,
+                           data = all_data)
+
+m_behavior_int_cont_vcov <- vcovHC(m_behavior_int_cont)
+
+m_restrict_int_know <- lm(restrict ~ 
+                             condition +
+                             contact +
+                             know +
+                             condition:know +
+                            numeracy +
+                            trust +
+                            age +
+                             gender +
+                             education +
+                             ethnicity_simple +
+                             income_cat +
+                             partisanship +
+                             eu_ref,
+                           data = all_data)
+
+m_restrict_int_know_vcov <- vcovHC(m_restrict_int_know)
+
+m_restrict_int_contact <- lm(restrict ~ 
+                               condition +
+                               contact +
+                               know +
+                               condition:contact +
+                               numeracy +
+                               trust +
+                               age +
+                               gender +
+                               education +
+                               ethnicity_simple +
+                               income_cat +
+                               partisanship +
+                               eu_ref,
+                             data = all_data)
+
+m_restrict_int_contact_vcov <- vcovHC(m_restrict_int_contact)
+
+m_restrict_int_know_glm <- glm(restrict_binary ~ 
+                                 condition +
+                                 contact +
+                                 know +
+                                 condition:know +
+                                 numeracy +
+                                 trust +
+                                 age +
+                                 gender +
+                                 education +
+                                 ethnicity_simple +
+                                 income_cat +
+                                 partisanship +
+                                 eu_ref,
+                      data = all_data, family = "binomial")
+
+m_restrict_int_know_glm_vcov <- vcovHC(m_restrict_int_know_glm)
+
+m_restrict_int_contact_glm <- glm(restrict_binary ~ 
+                                    condition +
+                                    contact +
+                                    know +
+                                    condition:contact +
+                                    numeracy +
+                                    trust +
+                                    age +
+                                    gender +
+                                    education +
+                                    ethnicity_simple +
+                                    income_cat +
+                                    partisanship +
+                                    eu_ref,
+                                  data = all_data, family = "binomial")
+
+m_restrict_int_contact_glm_vcov <- vcovHC(m_restrict_int_contact_glm)
+
+```
+
+```{r tab3, echo=FALSE, results='asis'}
+texreg::texreg(list(m_govt_perf, m_behavior, m_level_concern, m_restrict), 
+               single.row = TRUE, 
+               caption = "Main effects (OLS with robust standard errors)",
+               custom.model.names=c("Govt. perform.",
+                                    "Activity",
+                                    "Concern",
+                                    "Supp. restrictions"), 
+               override.se = list(coeftest(m_govt_perf, vcov = m_govt_perf_vcov)[,2],
+                                  coeftest(m_behavior, vcov = m_behavior_vcov)[,2],
+                                  coeftest(m_level_concern, vcov = m_level_concern_vcov)[,2],
+                                  coeftest(m_restrict, vcov = m_restrict_vcov)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf, vcov = m_govt_perf_vcov)[,4],
+                                  coeftest(m_behavior, vcov = m_behavior_vcov)[,4],
+                                  coeftest(m_level_concern, vcov = m_level_concern_vcov)[,4],
+                                  coeftest(m_restrict, vcov = m_restrict_vcov)[,4]),
+               caption.above = TRUE,
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               reorder.coef = c(1:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
+               custom.coef.names = c("(Intercept)", "Cond.: UK-Only", "Cond.: Comp.", "Contact", "Knowledge", "Numeracy", "Trust", "Age", "Male", "GCSE or below", "Postgraduate", "Undergraduate", "Other ethnicity", "Income > 30k", "Green", "Labour", "Lib Dem", "No party", "Other party", "EU: Did not vote", "EU: Remain"),
+               label="tab3",
+               digits=3)
+
+```
+
+```{r tab4, echo=FALSE, results='asis'}
+texreg::texreg(list(m_govt_perf_int_trust), 
+               single.row = TRUE, 
+               caption = "Interaction effects: Condition x Trust (OLS with robust standard errors)",
+               custom.model.names=c("Govt. perform."),
+               override.se = list(coeftest(m_govt_perf_int_trust, vcov = m_govt_perf_int_trust_vcov)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf_int_trust, vcov = m_govt_perf_int_trust_vcov)[,4]),
+               caption.above = TRUE,
+               custom.coef.names = c("(Intercept)", 
+               "Cond.: UK-Only", 
+               "Cond.: Comparative", 
+               "Contact", 
+               "Knowledge", 
+               "Numeracy", 
+               "Trust", 
+               "Age", 
+               "Male", 
+               "GCSE or below", 
+               "Postgraduate", 
+               "Undergraduate", 
+               "Other ethnicity", 
+               "Income > 30k",
+               "Green",
+               "Labour", 
+               "Lib Dem",
+               "No party",
+               "Other party", 
+               "EU: Did not vote", 
+               "EU: remain",
+               "  x Trust",
+               "  x Trust"),
+               reorder.coef = c(1, 2, 22, 3, 23, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               scriptsize=TRUE,
+               label="tab4",
+               digits=3)
+```
+
+```{r tab5, echo=FALSE, results='asis'}
+texreg::texreg(list(m_govt_perf_int_part), 
+               single.row = TRUE, 
+               caption = "Interaction effects: Partisanship (OLS with robust standard errors)",
+               custom.model.names=c("Govt. perform."),
+               override.se = list(coeftest(m_govt_perf_int_part, vcov = m_govt_perf_int_part_vcov)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf_int_part, vcov = m_govt_perf_int_part_vcov)[,4]),
+                              custom.coef.names = c("(Intercept)", 
+               "Cond.: UK-Only", 
+               "Cond.: Comparative", 
+               "Contact", 
+               "Knowledge", 
+               "Numeracy", 
+               "Trust", 
+               "Age", 
+               "Male", 
+               "GCSE or below", 
+               "Postgraduate", 
+               "Undergraduate", 
+               "Other ethnicity", 
+               "Income > 30k", 
+               "Green party", 
+               "Labour", 
+               "Lib Dem", 
+               "No party",
+               "Other party",
+               "EU: Did not vote", 
+               "EU: Remain",
+               "  x Green Party",
+               "  x Green Party",
+               "  x Labour",
+               "  x Labour",
+               "  x Lib Dem",
+               "  x Lib Dem",
+               "  x No party",
+               "  x No party",
+               "  x Other party",
+               "  x Other party"),
+               reorder.coef = c(1, 
+                                2, 22, 24, 26, 28, 30, 
+                                3, 23, 25, 27, 29, 31, 
+                                4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
+               caption.above = TRUE,
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               scriptsize=TRUE,
+               label="tab5",
+               digits=3)
+```
+
+```{r tab6, echo=FALSE, results='asis'}
+texreg::texreg(list(m_level_concern_int, # contact,
+                    m_restrict_int_contact), 
+               single.row = TRUE, 
+               caption = "Interaction effects: Condition x Contact (OLS with robust standard errors)",
+               caption.above = TRUE,
+               override.se = list(coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,2],
+                                  coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,2]),
+               override.pvalues = list(coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,4],
+                                  coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,4]),
+               custom.coef.names = c("(Intercept)", 
+               "Cond.: UK-Only", 
+               "Cond.: Comparative", 
+               "Contact", 
+               "Knowledge", 
+               "Numeracy", 
+               "Trust", 
+               "Age", 
+               "Male", 
+               "GCSE or below", 
+               "Postgraduate", 
+               "Undergraduate", 
+               "Other ethnicity", 
+               "Income > 30k", 
+               "Green Party", 
+               "Labour", 
+               "Lib Dem", 
+               "No party",
+               "Other party", 
+               "EU: Did not vote", 
+               "EU: Remain",
+               "  x Contact",
+               "  x Contact"),
+               reorder.coef = c(1, 2, 22, 3, 23, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
+               custom.model.names=c("Concern",
+                            "Supp. restrictions"),
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               scriptsize=TRUE,
+               label="tab6",
+               digits=3)
+
+```
+
+```{r tab7, echo=FALSE, results='asis'}
+texreg::texreg(list(m_behavior_int, # know
+                    m_restrict_int_know), 
+               single.row = TRUE, 
+               caption = "Interaction effects: Condition x Knowledge (OLS with robust standard errors)",
+               custom.model.names=c("Activity",
+                            "Supp. restrictions"),
+              override.se = list(coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,2],
+                                  coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,2]),
+               override.pvalues = list(coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,4],
+                                  coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,4]),
+               caption.above = TRUE,
+               custom.coef.names = c("(Intercept)", 
+               "Cond.: UK-Only", 
+               "Cond.: Comparative", 
+               "Contact", 
+               "Knowledge", 
+               "Numeracy", 
+               "Trust", 
+               "Age", 
+               "Male", 
+               "GCSE or below", 
+               "Postgraduate", 
+               "Undergraduate", 
+               "Other ethnicity", 
+               "Income > 30k", 
+               "Green Party", 
+               "Labour", 
+               "Lib Dem", 
+               "No party",
+               "Other party", 
+               "EU: Did not vote", 
+               "EU: Remain",
+               "  x Knowledge",
+               "  x Knowledge"),
+               reorder.coef = c(1, 2, 22, 3, 23, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               scriptsize=TRUE,
+               label="tab7",
+               digits=3)
+```
+
+```{r tab8, echo=FALSE, results='asis'}
+texreg::texreg(list(m_restrict_glm, m_restrict_int_know_glm, m_restrict_int_contact_glm), 
+               single.row = TRUE, 
+               caption = "Support for restrictions (logistic models with robust standard errors)",
+               custom.model.names=c("Main effect",
+                                    "x Knowledge",
+                                    "x Contact"), 
+               override.se = list(coeftest(m_restrict_glm, vcov = m_restrict_glm_vcov)[,2],
+                                  coeftest(m_restrict_int_know_glm, vcov = m_restrict_int_know_glm_vcov)[,2],
+                                  coeftest(m_restrict_int_contact_glm, vcov = m_restrict_int_contact_glm_vcov)[,2]),
+               override.pvalues = list(coeftest(m_restrict_glm, vcov = m_restrict_glm_vcov)[,4],
+                                  coeftest(m_restrict_int_know_glm, vcov = m_restrict_int_know_glm_vcov)[,4],
+                                  coeftest(m_restrict_int_contact_glm, vcov = m_restrict_int_contact_glm_vcov)[,4]),
+               caption.above = TRUE,
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               custom.coef.names = c("(Intercept)", 
+               "Cond.: UK-Only",
+               "Cond.: Comparative", 
+               "Contact", 
+               "Knowledge", 
+               "Numeracy", 
+               "Trust", 
+               "Age", 
+               "Male", 
+               "GCSE or below", 
+               "Postgraduate", 
+               "Undergraduate", 
+               "Other ethnicity", 
+               "Income > 30k", 
+               "Green Party", 
+               "Labour", 
+               "Lib Dem", 
+               "No party", 
+               "Other party", 
+               "EU: Did not vote",
+               "EU: Remain",
+               "  x Knowledge",
+               "  x Knowledge",
+               "  x Contact",
+               "  x Contact"),
+               reorder.coef = c(1, 2, 22, 24, 3, 23, 25, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
+               label="tab8",
+               digits=3)
+```
+
+```{r tab9, echo=FALSE, results='asis'}
+texreg::texreg(list(m_govt_perf_0, m_behavior_0, m_level_concern_0, m_restrict_0), 
+               single.row = TRUE, 
+               caption = "Main effects without covariates (OLS with robust standard errors)",
+               custom.model.names=c("Govt. perform.",
+                                    "Activity",
+                                    "Concern",
+                                    "Supp. restrictions"), 
+               override.se = list(coeftest(m_govt_perf_0, vcov = m_govt_perf_vcov_0)[,2],
+                                  coeftest(m_behavior_0, vcov = m_behavior_vcov_0)[,2],
+                                  coeftest(m_level_concern_0, vcov = m_level_concern_vcov_0)[,2],
+                                  coeftest(m_restrict_0, vcov = m_restrict_vcov_0)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf_0, vcov = m_govt_perf_vcov_0)[,4],
+                                  coeftest(m_behavior_0, vcov = m_behavior_vcov_0)[,4],
+                                  coeftest(m_level_concern_0, vcov = m_level_concern_vcov_0)[,4],
+                                  coeftest(m_restrict_0, vcov = m_restrict_vcov_0)[,4]),
+               caption.above = TRUE,
+               float.pos = "h!",
+               symbol = "\\cdot",
+               stars = c(0.001, 0.01, 0.05, 0.1),
+               custom.coef.names = c("(Intercept)", "Cond.: UK-Only", "Cond.: 
+                                     Comp."),
+               label="tab3",
+               digits=3)

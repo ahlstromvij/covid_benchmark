@@ -38,3 +38,8 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 .DS_Store
+
+# Markdown files
+markdown/covid_appendix.log
+markdown/covid_appendix.tex
+covid_appendix_files
