@@ -22,8 +22,8 @@ know_items <- data.frame(#all_data$k_scale_virus,
   all_data$k_scale_hot, # 1
   all_data$k_scale_vaccine, # 2
   all_data$k_scale_recover) # 3
-# all_data$k_scale_mosquito,
-#all_data$k_scale_antibiotics)
+  # all_data$k_scale_mosquito,
+  #all_data$k_scale_antibiotics)
 
 library(psych)
 psych::alpha(know_items, check.keys = TRUE)
@@ -33,6 +33,7 @@ mirt_know_scale <- mirt(data=know_items,
                         model=1,
                         itemtype = "2PL")
 summary(mirt_know_scale)
+
 plot(mirt_know_scale, type="trace")
 plot(mirt_know_scale, type="info")
 coef(mirt_know_scale, IRTpars=T)
@@ -72,6 +73,7 @@ mirt_contact_scale <- mirt(data=contact_items,
                            model=1,
                            itemtype = "2PL")
 summary(mirt_contact_scale)
+
 plot(mirt_contact_scale, type="trace")
 plot(mirt_contact_scale, type="info")
 coef(mirt_contact_scale, IRTpars=T)
@@ -143,9 +145,9 @@ library(mirt)
 worry_scale_items <- data.frame(all_data$worry_scale_contracting,
                                 all_data$worry_scale_unwell,
                                 all_data$worry_scale_fr_fam)
-# all_data$worry_scale_finances,
-# all_data$worry_scale_job,
-# all_data$worry_scale_society) # these three don't load well
+                                # all_data$worry_scale_finances,
+                                # all_data$worry_scale_job,
+                                # all_data$worry_scale_society) # these three don't load well
 psych::alpha(worry_scale_items)
 
 IRT_worry_scale <- mirt(data=worry_scale_items,
@@ -153,6 +155,7 @@ IRT_worry_scale <- mirt(data=worry_scale_items,
                         itemtype = "gpcm")
 summary(IRT_worry_scale)
 plot(IRT_worry_scale, type="trace")
+
 plot(IRT_worry_scale, type="info")
 coef(IRT_worry_scale, IRTpars=T)
 worry <- fscores(IRT_worry_scale)[,1] # each person's expected score
@@ -421,6 +424,7 @@ IRT_trust_scale <- mirt(data=trust_items,
                         model=1,
                         itemtype = "gpcm")
 summary(IRT_trust_scale)
+
 plot(IRT_trust_scale, type="trace")
 plot(IRT_trust_scale, type="info")
 coef(IRT_trust_scale, IRTpars=T)
