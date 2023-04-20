@@ -1,6 +1,19 @@
 set.seed(100)
 
 library(tidyverse)
+library(car)
+library(multcomp)
+library(lmtest)
+library(sandwich)
+library(dplyr)
+library(broom)
+library(tidyr)
+library(ggplot2)
+library(pscl)
+library(ggpubr)
+library(RColorBrewer)
+library(haven)
+library(GDAtools)
 
 all_data <- readRDS("data/preprocessed_scales.rds") %>% 
   as_tibble()
@@ -107,69 +120,6 @@ all_data$trust_binary <- as.factor(all_data$trust_binary)
 all_data$numeracy_binary <- ifelse(all_data$numeracy<=0, 0, 1)
 all_data$numeracy_binary <- as.factor(all_data$numeracy_binary)
 
-# Descriptive stats
-age <- round(tapply(all_data$age,all_data$condition,mean),0)
-gender <- round(prop.table(table(all_data$gender,all_data$condition),2)*100,digits=1)
-education <- round(prop.table(table(all_data$education,all_data$condition),2)*100,digits=1)
-education <- education[c(2,1,4,3),]
-ethnicity <- round(prop.table(table(all_data$ethnicity_simple,all_data$condition),2)*100,digits=1)
-income <- round(prop.table(table(all_data$income_cat,all_data$condition),2)*100,digits=1)[2,]
-party <- round(prop.table(table(all_data$partisanship,all_data$condition),2)*100,digits=1)
-party <- party[c(1,4,5,3,2,6),]
-referendum <- round(prop.table(table(all_data$eu_ref,all_data$condition),2)*100,digits=1)
-contact <- round(tapply(all_data$contact,all_data$condition,mean),2)
-know <- round(tapply(all_data$know,all_data$condition,mean),2)
-trust <- round(tapply(all_data$trust,all_data$condition,mean),2)
-numeracy <- round(tapply(all_data$numeracy,all_data$condition,mean),2)
-
-summary_df <- data.frame(rbind(age,gender,education,ethnicity,income,party,referendum,contact,know,trust,numeracy))
-summary_df$sd <- NA
-for(i in 1:length(summary_df$control)){
-  summary_df$sd[i] <- round(sd(summary_df[i,1:3]),digits=2)
-}
-#summary_df[2:21,1:3] <- lapply(summary_df[2:21,1:3], function(x) paste(x,"%",sep=""))
-cond <- table(all_data$condition)
-summary_df <- rbind(summary_df,cond)
-summary_df$sd[24] <- round(sd(summary_df[24,1:3]),digits=2)
-
-row.names(summary_df) <- c("Age (mean):",
-                           "Female (percent)",
-                           "Male (percent)",
-                           "Educ: GCSE or less (percent)",
-                           "Educ: A-level (percent)",
-                           "Educ: Undergraduate (percent)",
-                           "Educ: Postgraduate (percent)",
-                           "Ethnicity: White (percent)",
-                           "Ethnicity: Other (percent)",
-                           "Income: above mean (30k) (percent)",
-                           "Party: Conservatives (percent)",
-                           "Party: Labour (percent)",
-                           "Party: Lib Dem (percent)",
-                           "Party: Green Party (percent)",
-                           "Party: Other party (percent)",
-                           "Party: No party (percent)",
-                           "EU vote: Leave (percent)",
-                           "EU vote: Remain (percent)",
-                           "EU vote: Didn't vote (percent)",
-                           "Contact (mean)",
-                           "Knowledge (mean)",
-                           "Trust (mean)",
-                           "Numeracy (mean)",
-                           "N")
-
-write.csv(summary_df,"tables/descr_stats_table.csv")
-
-# recruitment targets
-round(prop.table(table(all_data$ethnicity_simple,all_data$gender))*100,digits=1)
-
-sample_achieved <- round(prop.table(table(all_data$ethnicity_simple,all_data$gender))*100,digits=1)
-sample_achieved[1,1] <- paste(sample_achieved[1,1],"(44.0)",sep=" ")
-sample_achieved[2,1] <- paste(sample_achieved[2,1],"(7.0)",sep=" ")
-sample_achieved[1,2] <- paste(sample_achieved[1,2],"(42.0)",sep=" ")
-sample_achieved[2,2] <- paste(sample_achieved[2,2],"(7.0)",sep=" ")
-
-sample_achieved
-
 # Quick analysis
 # H1-main. The presence of mortality data will cause participants in either of the two treatment groups to express higher levels of concern about COVID-19, compared to the control group.
 tapply(all_data$worry, all_data$condition, mean) # yes
@@ -257,15 +207,11 @@ plot(m_level_concern, 5)
 # predictors and n is the number of observations.
 
 # robust standard errors
-library(lmtest)
-library(sandwich)
 m_level_concern_vcov <- vcovHC(m_level_concern)
 coeftest(m_level_concern, vcov = m_level_concern_vcov)
 coefci(m_level_concern, vcov = m_level_concern_vcov)
 
 # multiple comparison with robust standard errors
-library(car)
-library(multcomp)
 concern.multcomp <- glht(m_level_concern, linfct = mcp(condition = "Tukey") , vcov = m_level_concern_vcov)
 summary(concern.multcomp,test = adjusted("holm")) # "none" gives same as coeftest
 # there is no significant difference between the effect from treat 1 and 2
@@ -300,14 +246,11 @@ par(mfrow = c(2, 2))
 plot(m_level_concern_int)
 
 # robust standard errors
-library(lmtest)
-library(sandwich)
 m_level_concern_int_vcov <- vcovHC(m_level_concern_int)
 coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)
 coefci(m_level_concern_int, vcov = m_level_concern_int_vcov)
 
 # linear combinations
-library(multcomp)
 summary(glht(m_level_concern_int, linfct = c("conditiontreat1 + conditiontreat1:contact = 0"), vcov. = m_level_concern_int_vcov))
 summary(glht(m_level_concern_int, linfct = c("conditiontreat2 + conditiontreat2:contact = 0"), vcov. = m_level_concern_int_vcov))
 
@@ -347,14 +290,10 @@ par(mfrow = c(2, 2))
 plot(m_govt_perf)
 
 # robust standard errors
-library(lmtest)
-library(sandwich)
 m_govt_perf_vcov <- vcovHC(m_govt_perf)
 coeftest(m_govt_perf, vcov = m_govt_perf_vcov)
 
 # multiple comparison with robust standard errors
-library(car)
-library(multcomp)
 govt_perf.multcomp <- glht(m_govt_perf, linfct = mcp(condition = "Tukey") , vcov = m_govt_perf_vcov)
 summary(govt_perf.multcomp,test = adjusted("holm")) # "none" gives same as coeftest
 par(mfrow = c(1, 1))
@@ -582,12 +521,9 @@ anova(m_govt_perf, m_govt_perf_int_trust)
 Anova(m_govt_perf_int_trust)
 
 # robust standard errors
-library(lmtest)
-library(sandwich)
 m_govt_perf_int_trust_vcov <- vcovHC(m_govt_perf_int_trust)
 coeftest(m_govt_perf_int_trust, vcov = m_govt_perf_int_trust_vcov)
 
-library(multcomp)
 interact(m_govt_perf_int_trust, m_govt_perf_int_trust_vcov, "conditiontreat1","conditiontreat1:trust")
 interact(m_govt_perf_int_trust, m_govt_perf_int_trust_vcov, "conditiontreat2","conditiontreat2:trust")
 
@@ -660,6 +596,106 @@ ggplot(df_lincomb2, aes(x=Trust, y=Effect, group=Condition, color=Condition)) +
   theme(plot.title = element_text(face = "bold"))
 dev.off()
 
+# interact with distrust
+m_govt_perf_int_distrust <- lm(govt_perf ~ 
+                              condition +
+                              condition:distrust +
+                              contact +
+                              know +
+                              numeracy +
+                              trust +
+                              age +
+                              gender +
+                              education +
+                              ethnicity_simple +
+                              income_cat +
+                              partisanship +
+                              eu_ref,
+                            data = all_data)
+summary(m_govt_perf_int_distrust)
+
+par(mfrow = c(2, 2))
+plot(m_govt_perf_int_distrust)
+
+anova(m_govt_perf, m_govt_perf_int_distrust)
+Anova(m_govt_perf_int_distrust)
+
+# robust standard errors
+m_govt_perf_int_distrust_vcov <- vcovHC(m_govt_perf_int_distrust)
+coeftest(m_govt_perf_int_distrust, vcov = m_govt_perf_int_distrust_vcov)
+
+interact(m_govt_perf_int_distrust, m_govt_perf_int_distrust_vcov, "conditiontreat1","conditiontreat1:distrust")
+interact(m_govt_perf_int_distrust, m_govt_perf_int_distrust_vcov, "conditiontreat2","conditiontreat2:distrust")
+
+df2 <- rbind(df2, interact(m_govt_perf_int_distrust, m_govt_perf_int_distrust_vcov, "conditiontreat1","conditiontreat1:distrust"))
+df2 <- rbind(df2, interact(m_govt_perf_int_distrust, m_govt_perf_int_distrust_vcov, "conditiontreat2","conditiontreat2:distrust"))
+
+# is the level of distrust about the same across conditions?
+tapply(all_data$distrust, all_data$condition, mean)
+
+df3 <- rbind(df3,data.frame(cbind(summary(m_govt_perf_int_distrust)$coefficients[c(23:24),],
+                                  coefci(m_govt_perf_int_distrust)[c(23:24),],
+                                  data.frame(DV=rep("govt_distrust",2)))))
+
+# plot linear combinations
+mean(all_data$distrust)
+max(all_data$distrust)
+min(all_data$distrust)
+
+summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 + conditiontreat1:distrust*(-1) = 0"), vcov. = m_govt_perf_int_distrust_vcov))
+summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 = 0"), vcov. = m_govt_perf_int_distrust_vcov))
+summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 + conditiontreat1:distrust*(1) = 0"), vcov. = m_govt_perf_int_distrust_vcov))
+
+summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 + conditiontreat2:distrust*(-1) = 0"), vcov. = m_govt_perf_int_distrust_vcov))
+summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 = 0"), vcov. = m_govt_perf_int_distrust_vcov))
+summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 + conditiontreat2:distrust*(1) = 0"), vcov. = m_govt_perf_int_distrust_vcov))
+
+df_lincomb3 <- data.frame("Interaction" = c(rep("govt_permXdistrust",6)),
+                          "Condition" = c(rep("UK-Only",3),rep("Comparative",3)),
+                          "Distrust" = c(rep(c("0 (mean)","+1 SD","-1 SD"),2)),
+                          "Effect" = c(summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 = 0"), 
+                                                    vcov. = m_govt_perf_int_distrust_vcov))$test$coefficients[[1]],
+                                       summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 + conditiontreat1:distrust = 0"), 
+                                                    vcov. = m_govt_perf_int_distrust_vcov))$test$coefficients[[1]],
+                                       summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 + conditiontreat1:distrust*(-1) = 0"), 
+                                                    vcov. = m_govt_perf_int_distrust_vcov))$test$coefficients[[1]],
+                                       summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 = 0"), 
+                                                    vcov. = m_govt_perf_int_distrust_vcov))$test$coefficients[[1]],
+                                       summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 + conditiontreat2:distrust = 0"), 
+                                                    vcov. = m_govt_perf_int_distrust_vcov))$test$coefficients[[1]],
+                                       summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 + conditiontreat2:distrust*(-1) = 0"), 
+                                                    vcov. = m_govt_perf_int_distrust_vcov))$test$coefficients[[1]]),
+                          "SE" = c(summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 = 0"), 
+                                                vcov. = m_govt_perf_int_distrust_vcov))$test$sigma[[1]],
+                                   summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 + conditiontreat1:distrust = 0"), 
+                                                vcov. = m_govt_perf_int_distrust_vcov))$test$sigma[[1]],
+                                   summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat1 + conditiontreat1:distrust*(-1) = 0"), 
+                                                vcov. = m_govt_perf_int_distrust_vcov))$test$sigma[[1]],
+                                   summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 = 0"), 
+                                                vcov. = m_govt_perf_int_distrust_vcov))$test$sigma[[1]],
+                                   summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 + conditiontreat2:distrust = 0"), 
+                                                vcov. = m_govt_perf_int_distrust_vcov))$test$sigma[[1]],
+                                   summary(glht(m_govt_perf_int_distrust, linfct = c("conditiontreat2 + conditiontreat2:distrust*(-1) = 0"), 
+                                                vcov. = m_govt_perf_int_distrust_vcov))$test$sigma[[1]]))
+df_lincomb3$upr <- df_lincomb3$Effect + 1.96 * df_lincomb3$SE
+df_lincomb3$lwr <- df_lincomb3$Effect - 1.96 * df_lincomb3$SE
+
+df_lincomb3$Distrust <- factor(df_lincomb3$Distrust, levels = c("-1 SD","0 (mean)","+1 SD"))
+
+png(file="plots/govperf_distrust.png", width = 7, height = 6, units = 'in', res = 300)
+ggplot(df_lincomb3, aes(x=Distrust, y=Effect, group=Condition, color=Condition)) + 
+  theme_minimal() +
+  geom_line(position = position_dodge(width = 0.1)) +
+  geom_point(position = position_dodge(width = 0.1)) +
+  geom_pointrange(aes(ymin=lwr, ymax=upr), position = position_dodge(width = 0.1)) +
+  geom_hline(yintercept=0, linetype="dashed") +
+  xlab("Level of distrust") +
+  ylab("Treatment effect") +
+  ggtitle("Government Performance: Condition x Distrust") +
+  labs(subtitle = "Estimated effect of condition compared to Control at different levels of distrust") +
+  theme(plot.title = element_text(face = "bold"))
+dev.off()
+
 # interact with partisanship
 m_govt_perf_int_part <- lm(govt_perf ~ 
                              condition +
@@ -681,8 +717,6 @@ summary(m_govt_perf_int_part) # Conservatives less supportive in treat1, and Lab
 par(mfrow = c(2, 2))
 plot(m_govt_perf_int_part)
 
-library(lmtest)
-library(sandwich)
 m_govt_perf_int_part_vcov <- vcovHC(m_govt_perf_int_part)
 coeftest(m_govt_perf_int_part, vcov = m_govt_perf_int_part_vcov)
 
@@ -724,8 +758,6 @@ summary(m_govt_perf_int_part_bin) # Conservatives less supportive in treat1, and
 par(mfrow = c(2, 2))
 plot(m_govt_perf_int_part_bin)
 
-library(lmtest)
-library(sandwich)
 m_govt_perf_int_part_bin_vcov <- vcovHC(m_govt_perf_int_part_bin)
 coeftest(m_govt_perf_int_part_bin, vcov = m_govt_perf_int_part_bin_vcov)
 
@@ -757,8 +789,6 @@ summary(m_govt_perf_int_know)
 par(mfrow = c(2, 2))
 plot(m_govt_perf_int_part)
 
-library(lmtest)
-library(sandwich)
 m_govt_perf_int_know_vcov <- vcovHC(m_govt_perf_int_know)
 coeftest(m_govt_perf_int_know, vcov = m_govt_perf_int_know_vcov)
 
@@ -798,14 +828,10 @@ par(mfrow = c(2, 2))
 plot(m_behavior)
 
 # robust standard errors
-library(lmtest)
-library(sandwich)
 m_behavior_vcov <- vcovHC(m_behavior)
 coeftest(m_behavior, vcov = m_behavior_vcov)
 
 # multiple comparison with robust standard errors
-library(car)
-library(multcomp)
 m_behavior.multcomp <- glht(m_behavior, linfct = mcp(condition = "Tukey") , vcov = m_behavior_vcov)
 summary(m_behavior.multcomp,test = adjusted("holm")) # "none" gives same as coeftest
 par(mfrow = c(1, 1))
@@ -836,12 +862,9 @@ summary(m_behavior_int)
 par(mfrow = c(2, 2))
 plot(m_behavior_int)
 
-library(lmtest)
-library(sandwich)
 m_behavior_int_vcov <- vcovHC(m_behavior_int)
 coeftest(m_behavior_int, vcov = m_behavior_int_vcov)
 
-library(multcomp)
 mean(all_data$know) + sd(all_data$know)
 mean(all_data$know) - sd(all_data$know)
 summary(glht(m_behavior_int, linfct = c("conditiontreat1 + conditiontreat1:know*(0.5037164) = 0"), vcov. = m_behavior_int_vcov))
@@ -877,12 +900,9 @@ summary(m_behavior_int_cont)
 par(mfrow = c(2, 2))
 plot(m_behavior_int_cont)
 
-library(lmtest)
-library(sandwich)
 m_behavior_int_cont_vcov <- vcovHC(m_behavior_int_cont)
 coeftest(m_behavior_int_cont, vcov = m_behavior_int_cont_vcov)
 
-library(multcomp)
 mean(all_data$contact) + sd(all_data$contact)
 mean(all_data$contact) - sd(all_data$contact)
 summary(glht(m_behavior_int_cont, linfct = c("conditiontreat1 + conditiontreat1:contact*(0.6280946) = 0"), vcov. = m_behavior_int_cont_vcov))
@@ -929,7 +949,6 @@ plot(m_restrict)
 # to use non-linear transformations of the predictors, such as log(x), sqrt(x) and x^2, in the 
 # regression model.
 
-library(car)
 # crPlots(m_restrict)
 
 m_restrict_glm <- glm(restrict_binary ~ 
@@ -955,11 +974,6 @@ coeftest(m_restrict_glm, vcov = m_restrict_glm_vcov)
 model <- m_restrict_glm
 dv <- all_data$restrict_binary
 
-library(dplyr)
-library(broom)
-library(tidyr)
-library(ggplot2)
-
 # extreme values
 par(mfrow = c(1, 1))
 plot(model, which = 4, id.n = 3)
@@ -978,18 +992,13 @@ model.data %>%
 car::vif(model)
 
 # mcfadden
-library(pscl)
 pR2(model)[4]
 
 # robust standard errors
-library(lmtest)
-library(sandwich)
 m_restrict_vcov <- vcovHC(m_restrict)
 coeftest(m_restrict, vcov = m_restrict_vcov)
 
 # multiple comparison with robust standard errors
-library(car)
-library(multcomp)
 m_restrict.multcomp <- glht(m_restrict, linfct = mcp(condition = "Tukey") , vcov = m_restrict_vcov)
 summary(m_restrict.multcomp,test = adjusted("holm")) # "none" gives same as coeftest
 par(mfrow = c(1, 1))
@@ -1023,12 +1032,9 @@ summary(m_restrict_int_know) # no effect
 par(mfrow = c(2, 2))
 plot(m_restrict_int_know)
 
-library(lmtest)
-library(sandwich)
 m_restrict_int_know_vcov <- vcovHC(m_restrict_int_know)
 coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)
 
-library(multcomp)
 mean(all_data$know) + sd(all_data$know)
 mean(all_data$know) - sd(all_data$know)
 summary(glht(m_restrict_int_know, linfct = c("conditiontreat1 + conditiontreat1:know*(0.5037164) = 0"), vcov. = m_restrict_int_know_vcov))
@@ -1067,11 +1073,6 @@ coeftest(m_restrict_int_know_glm, vcov = m_restrict_int_know_glm_vcov)
 model <- m_restrict_int_know_glm
 dv <- all_data$restrict_binary
 
-library(dplyr)
-library(broom)
-library(tidyr)
-library(ggplot2)
-
 # extreme values
 par(mfrow = c(1, 1))
 plot(model, which = 4, id.n = 3)
@@ -1090,7 +1091,6 @@ model.data %>%
 car::vif(model)
 
 # mcfadden
-library(pscl)
 pR2(model)[4]
 
 # restrictions interacted with contact
@@ -1114,12 +1114,9 @@ summary(m_restrict_int_contact)
 par(mfrow = c(2, 2))
 plot(m_restrict_int_contact)
 
-library(lmtest)
-library(sandwich)
 m_restrict_int_contact_vcov <- vcovHC(m_restrict_int_contact)
 coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)
 
-library(multcomp)
 mean(all_data$contact) + sd(all_data$contact)
 mean(all_data$contact) - sd(all_data$contact)
 summary(glht(m_restrict_int_contact, linfct = c("conditiontreat1 + conditiontreat1:contact*(0.6280946) = 0"), vcov. = m_restrict_int_contact_vcov))
@@ -1158,11 +1155,6 @@ coeftest(m_restrict_int_contact_glm, vcov = m_restrict_int_contact_glm_vcov)
 model <- m_restrict_int_contact_glm
 dv <- all_data$restrict_binary
 
-library(dplyr)
-library(broom)
-library(tidyr)
-library(ggplot2)
-
 # extreme values
 par(mfrow = c(1, 1))
 plot(model, which = 4, id.n = 3)
@@ -1181,7 +1173,6 @@ model.data %>%
 car::vif(model)
 
 # mcfadden
-library(pscl)
 pR2(model)[4]
 
 # write.csv(df2, "interaction_effects.csv")
@@ -1292,7 +1283,6 @@ png(file="plots/restrict.png", width = 8, height = 6, units = 'in', res = 300)
 restrict_graph
 dev.off()
 
-library(ggpubr)
 main_effects_graph <- ggarrange(govt_perf_graph, behavior_graph, concern_graph, restrict_graph,
                                 ncol = 2, nrow = 2,
                                 common.legend = FALSE, legend = NULL)
@@ -1320,8 +1310,6 @@ partisan_df_treat2$Interaction <- factor(partisan_df_treat2$Interaction,
 partisan_df_binary <- partisan_df[c(11,12),]
 partisan_df_binary$Condition <- c("UK-only","Comparative")
 
-library(ggplot2)
-library(RColorBrewer)
 partisan_treat1_graph <- partisan_df_treat1 %>% 
   ggplot() +
   aes(x=Interaction, y=Estimate, group=Interaction) +
