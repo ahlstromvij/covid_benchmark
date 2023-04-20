@@ -30,6 +30,7 @@ library(stargazer)
 library(texreg)
 library(lmtest)
 library(sandwich)
+library(haven)
 
 set.seed(100)
 ```
@@ -180,23 +181,25 @@ manipulation_df <- data.frame(
 library(dplyr)
 manipulation_df <- manipulation_df %>%
   arrange(manip) %>%
-  mutate(manip = factor(manip, levels=c("One","More than one")))
+  rename(Response = manip) %>% 
+  mutate(Response = factor(Response, levels=c("One","More than one")))
 
 library(ggplot2)
 ggplot(manipulation_df, aes(x = condition, y = part))+
-  geom_col(aes(fill = manip), width = 0.7) +
+  geom_col(aes(fill = Response), width = 0.7) +
   ylab("Number of participants") +
   xlab("Condition") +
   theme(legend.title = element_blank()) +
-  geom_text(aes(y = y, label = part, group = manip), color = c("white","white","white","black")) +
+  geom_text(aes(y = y, label = part, group = Response), color = c("black","black","white","black")) +
+  scale_fill_grey() +
   theme_minimal()
 ```
 
 # Sample details
 
-Table \ref{tab:tab1} provides details on the distribution of participants across the three conditions along measured variables. Table \ref{tab:tab2} gives details on the achieved proportion and sample targets by gender and ethnicity.
+Table \ref{tab:tab1a} provides details on the distribution of participants across the three conditions along demographic variables, and Table \ref{tab:tab1b} does the same for for pre-treatment variables. The BES benchmark proportions in the former table are from [Wave 20 of the 2014-2023 British Election Study Internet Panel](https://www.britishelectionstudy.com/data-object/wave-20-of-the-2014-2023-british-election-study-internet-panel/), fielded in June 2020 (N = 31,468), so a month before our survey data was collected. Table \ref{tab:tab2} gives details on the achieved proportion and sample targets by gender and ethnicity.
 
-```{r tab1, echo=FALSE}
+```{r tab1a, echo=FALSE}
 # Set up dataframe for main effects coefficients
 df <- data.frame("row" = 1:21, "coefs" = NA, 
                  "govt_perf_est" = NA, "govt_perf_se" = NA, "govt_perf_p" = NA,
@@ -262,54 +265,214 @@ education <- education[c(2,1,4,3),]
 ethnicity <- round(prop.table(table(all_data$ethnicity_simple,all_data$condition),2)*100,digits=1)
 income <- round(prop.table(table(all_data$income_cat,all_data$condition),2)*100,digits=1)[2,]
 party <- round(prop.table(table(all_data$partisanship,all_data$condition),2)*100,digits=1)
-party <- party[c(1,4,5,3,2,6),]
+party <- party[c(1,3,4,2,6,5),]
 referendum <- round(prop.table(table(all_data$eu_ref,all_data$condition),2)*100,digits=1)
+referendum <- referendum[c(1,3,2),]
+
+summary_df <- data.frame(rbind(age,gender,education,ethnicity,income,party,referendum))
+summary_df$sd <- NA
+for(i in 1:length(summary_df$control)){
+  summary_df$sd[i] <- round(sd(summary_df[i,1:3]),digits=2)
+}
+
+cond <- table(all_data$condition)
+summary_df <- rbind(summary_df,cond)
+summary_df$sd[20] <- round(sd(summary_df[20,1:3]),digits=2)
+
+row.names(summary_df) <- c("Age (mean):",
+                           "Female (perc.)",
+                           "Male (perc.)",
+                           "Educ: GCSE or less (perc.)",
+                           "Educ: A-level (perc.)",
+                           "Educ: Undergraduate (perc.)",
+                           "Educ: Postgraduate (perc.)",
+                           "Ethnicity: White (perc.)",
+                           "Ethnicity: Other (perc.)",
+                           "Income: above mean (30k) (perc.)",
+                           "Party: Conservatives (perc.)",
+                           "Party: Labour (perc.)",
+                           "Party: Lib Dem (perc.)",
+                           "Party: Green Party (perc.)",
+                           "Party: Other party (perc.)",
+                           "Party: No party (perc.)",
+                           "EU vote: Leave (perc.)",
+                           "EU vote: Remain (perc.)",
+                           "EU vote: Didn't vote (perc.)",
+                           "N")
+
+# BES benchmarks
+bes_data <- read_sav("../data/BES2019_W20_v23.0.sav")
+# https://www.britishelectionstudy.com/data-object/wave-20-of-the-2014-2023-british-election-study-internet-panel/
+
+bes_data_subset <- bes_data %>% 
+  dplyr::select(age, 
+                gender, 
+                p_education, 
+                p_ethnicity,
+                p_gross_household,
+                partyId,
+                p_eurefvote,
+                p_eurefturnout,
+                wt)
+
+bes_data_subset <- bes_data_subset %>% 
+  rename(age = age,
+         gender = gender,
+         education = p_education,
+         ethnicity = p_ethnicity,
+         income = p_gross_household,
+         party = partyId,
+         referendum = p_eurefvote,
+         referendum_turnout = p_eurefturnout,
+         wt = wt)
+
+bes_data_subset <- bes_data_subset %>% 
+  mutate(gender = case_when(gender == 1 ~ "male",
+                            gender == 2 ~ "female"),
+         education = case_when(education == 1 ~ "GCSE_or_below",
+                               education == 2 ~ "GCSE_or_below",
+                               education == 3 ~ "GCSE_or_below",
+                               education == 4 ~ "GCSE_or_below",
+                               education == 5 ~ "A-level",
+                               education == 6 ~ "A-level",
+                               education == 7 ~ "A-level",
+                               education == 8 ~ "GCSE_or_below",
+                               education == 9 ~ "GCSE_or_below",
+                               education == 10 ~ "GCSE_or_below",
+                               education == 11 ~ "A-level",
+                               education == 12 ~ "A-level",
+                               education == 13 ~ "A-level",
+                               education == 14 ~ "A-level",
+                               education == 15 ~ "Undergrad",
+                               education == 16 ~ "Undergrad",
+                               education == 17 ~ "Postgrad",
+                               education == 18 ~ "Undergrad",
+                               education == 19 ~ NA_character_,
+                               education == 20 ~ NA_character_,
+                               TRUE ~ NA_character_),
+         ethnicity = case_when(ethnicity == 1 ~ "White",
+                               ethnicity == 2 ~ "White",
+                               ethnicity > 2 & ethnicity < 16 ~ "Other",
+                               TRUE ~ NA_character_),
+         income = case_when(income < 7 ~ 0,
+                            income > 6 & income < 16 ~ 1,
+                            TRUE ~ NA_real_),
+         party = case_when(party == 1 ~ "Cons",
+                           party == 2 ~ "Labour",
+                           party == 3 ~ "Lib_Dem",
+                           party == 4 ~ "Other",
+                           party == 5 ~ "Other",
+                           party == 7 ~ "Green",
+                           party == 9 ~ "Other",
+                           party == 10 ~ "No_party",
+                           party == 12 ~ "Other",
+                           TRUE ~ NA_character_),
+         referendum = case_when(referendum == 0 ~ "Remain",
+                                referendum == 1 ~ "Leave",
+                                referendum_turnout == 1 ~ "No_vote",
+                                TRUE ~ NA_character_))
+
+gender_props <- bes_data_subset %>% 
+  drop_na(gender) %>%
+  count(gender, wt = wt) %>%
+  mutate(prop = n/sum(n),
+         prop = round(prop * 100,1))
+
+education_props <- bes_data_subset %>% 
+  drop_na(education) %>% 
+  count(education, wt = wt) %>%
+  mutate(prop = n/sum(n),
+         prop = round(prop * 100,1))
+
+ethnicity_props <- bes_data_subset %>% 
+  drop_na(ethnicity) %>% 
+  count(ethnicity, wt = wt) %>%
+  mutate(prop = n/sum(n),
+         prop = round(prop * 100,1)) 
+
+income_props <- bes_data_subset %>% 
+  drop_na(income) %>% 
+  count(income, wt = wt) %>%
+  mutate(prop = n/sum(n),
+         prop = round(prop * 100,1)) 
+
+party_props <- bes_data_subset %>% 
+  drop_na(party) %>% 
+  count(party, wt = wt) %>%
+  mutate(prop = n/sum(n),
+         prop = round(prop * 100,1)) 
+
+referendum_props <- bes_data_subset %>% 
+  drop_na(referendum) %>% 
+  count(referendum, wt = wt) %>%
+  mutate(prop = n/sum(n),
+         prop = round(prop * 100,1))
+
+summary_df$bes <- NA
+summary_df$bes[1] <- round(weighted.mean(bes_data_subset$age, bes_data_subset$wt, na.rm = TRUE),2)
+summary_df$bes[2] <- gender_props$prop[1]
+summary_df$bes[3] <- gender_props$prop[2]
+summary_df$bes[4] <- education_props$prop[2]
+summary_df$bes[5] <- education_props$prop[1]
+summary_df$bes[6] <- education_props$prop[4]
+summary_df$bes[7] <- education_props$prop[3]
+summary_df$bes[8] <- ethnicity_props$prop[2]
+summary_df$bes[9] <- ethnicity_props$prop[1]
+summary_df$bes[10] <- income_props$prop[2]
+summary_df$bes[11] <- party_props$prop[1]
+summary_df$bes[12] <- party_props$prop[3]
+summary_df$bes[13] <- party_props$prop[4]
+summary_df$bes[14] <- party_props$prop[2]
+summary_df$bes[15] <- party_props$prop[6]
+summary_df$bes[16] <- party_props$prop[5]
+summary_df$bes[17] <- referendum_props$prop[1]
+summary_df$bes[18] <- referendum_props$prop[3]
+summary_df$bes[19] <- referendum_props$prop[2]
+summary_df$bes[20] <- round(length(bes_data_subset$gender),0)
+
+summary_df$bes <- as.numeric(summary_df$bes)
+
+knitr::kable(summary_df,
+             caption="Demographic variables by treatment with BES benchmarks (Wave 20 of the BES Internet Panel, June 2020; survey weights applied)",
+             booktabs=TRUE,
+             linesep = "",
+             escape = FALSE, 
+             label="tab1a",
+             col.names = linebreak(c("Control",
+                                     "UK-Only\nTreatment",
+                                     "Comparative\nTreatment",
+                                     "SD",
+                                     "BES\nBenchmark"), align = "c"))
+```
+
+```{r tab1b, echo=FALSE, results='asis'}
 contact <- round(tapply(all_data$contact,all_data$condition,mean),2)
 know <- round(tapply(all_data$know,all_data$condition,mean),2)
 trust <- round(tapply(all_data$trust,all_data$condition,mean),2)
 numeracy <- round(tapply(all_data$numeracy,all_data$condition,mean),2)
 
-summary_df <- data.frame(rbind(age,gender,education,ethnicity,income,party,referendum,contact,know,trust,numeracy))
-summary_df$sd <- NA
-for(i in 1:length(summary_df$control)){
-  summary_df$sd[i] <- round(sd(summary_df[i,1:3]),digits=2)
-}
-#summary_df[2:21,1:3] <- lapply(summary_df[2:21,1:3], function(x) paste(x,"%",sep=""))
-cond <- table(all_data$condition)
-summary_df <- rbind(summary_df,cond)
-summary_df$sd[24] <- round(sd(summary_df[24,1:3]),digits=2)
+pretreat_df <- data.frame(rbind(contact,know,trust,numeracy))
 
-row.names(summary_df) <- c("Age (mean):",
-                           "Female (percent)",
-                           "Male (percent)",
-                           "Educ: GCSE or less (percent)",
-                           "Educ: A-level (percent)",
-                           "Educ: Undergraduate (percent)",
-                           "Educ: Postgraduate (percent)",
-                           "Ethnicity: White (percent)",
-                           "Ethnicity: Other (percent)",
-                           "Income: above mean (30k) (percent)",
-                           "Party: Conservatives (percent)",
-                           "Party: Labour (percent)",
-                           "Party: Lib Dem (percent)",
-                           "Party: Green Party (percent)",
-                           "Party: Other party (percent)",
-                           "Party: No party (percent)",
-                           "EU vote: Leave (percent)",
-                           "EU vote: Remain (percent)",
-                           "EU vote: Didn't vote (percent)",
-                           "Contact (mean)",
+pretreat_df$sd <- NA
+for(i in 1:length(pretreat_df$control)){
+  pretreat_df$sd[i] <- round(sd(pretreat_df[i,1:3]),digits=2)
+}
+
+pretreat_df <- rbind(pretreat_df,cond)
+pretreat_df$sd[5] <- round(sd(summary_df[5,1:3]),digits=2)
+
+row.names(pretreat_df) <- c("Contact (mean)",
                            "Knowledge (mean)",
                            "Trust (mean)",
                            "Numeracy (mean)",
                            "N")
 
-knitr::kable(summary_df,
-             caption="Demographic and other pre-treatment variables by treatment",
+knitr::kable(pretreat_df,
+             caption="Pre-treatment variables by treatment",
              booktabs=TRUE,
              linesep = "",
              escape = FALSE, 
-             label="tab1",
+             label="tab1b",
              col.names = linebreak(c("Control",
                                      "UK-Only\nTreatment",
                                      "Comparative\nTreatment",
