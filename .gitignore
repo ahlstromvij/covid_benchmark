@@ -43,3 +43,6 @@ vignettes/*.pdf
 markdown/covid_appendix.log
 markdown/covid_appendix.tex
 covid_appendix_files
+
+# BES files
+BES2019_W20_v23.0.sav
