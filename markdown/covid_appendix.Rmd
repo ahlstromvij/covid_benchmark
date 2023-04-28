@@ -409,7 +409,7 @@ referendum_props <- bes_data_subset %>%
          prop = round(prop * 100,1))
 
 summary_df$bes <- NA
-summary_df$bes[1] <- round(weighted.mean(bes_data_subset$age, bes_data_subset$wt, na.rm = TRUE),2)
+summary_df$bes[1] <- round(weighted.mean(bes_data_subset$age, bes_data_subset$wt, na.rm = TRUE),1)
 summary_df$bes[2] <- gender_props$prop[1]
 summary_df$bes[3] <- gender_props$prop[2]
 summary_df$bes[4] <- education_props$prop[2]
@@ -428,7 +428,7 @@ summary_df$bes[16] <- party_props$prop[5]
 summary_df$bes[17] <- referendum_props$prop[1]
 summary_df$bes[18] <- referendum_props$prop[3]
 summary_df$bes[19] <- referendum_props$prop[2]
-summary_df$bes[20] <- round(length(bes_data_subset$gender),0)
+summary_df$bes[20] <- round(length(bes_data_subset$gender),1)
 
 summary_df$bes <- as.numeric(summary_df$bes)
 
