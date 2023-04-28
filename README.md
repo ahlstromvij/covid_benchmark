@@ -1,3 +1,7 @@
 # Worst of the Bunch? Benchmarking Government Performance During COVID-19
 
 Benchmarking theories argue that voters use information about other countries’ economic performances to reward good performance and punish underperformance as a form of democratic accountability. But does this hold for non-economic information communicated visually? Using a pre-registered experiment, we showed UK respondents an image displaying the UK’s exceptionally high cumulative COVID-19 deaths either in isolation or alongside European countries with fewer deaths. In line with benchmarking, seeing the UK as “worst of the bunch” caused respondents to evaluate the government more negatively compared to seeing UK-only data, particularly among respondents holding high levels of trust in government. This suggests that, rather than providing a buffer of good will, political trust raised expectations that were frustrated by benchmarks revealing under-performance. By contrast, against expectations and prior scholarship, partisanship did not moderate evaluations. Our results theoretically extend benchmarking beyond economic settings to show how comparative information—communicated in visual forms—changes evaluations.
+
+## Contents
+
+All the data, plots, and tables can be found in the correspondingly named folders. The `markdown` folder contains the markdown file for the appendix. The `R` folder contains all scripts for processing and analyzing the data. Each R script has a corresponding `_no_drop` version, which conducts the same analysis but with no participants having been dropped.
