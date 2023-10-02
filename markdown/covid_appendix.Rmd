@@ -301,7 +301,7 @@ row.names(summary_df) <- c("Age (mean):",
                            "N")
 
 # BES benchmarks
-bes_data <- read_sav("../data/BES2019_W20_v23.0.sav")
+bes_data <- read_sav("../data/BES2019_W20_v24.0.sav")
 # https://www.britishelectionstudy.com/data-object/wave-20-of-the-2014-2023-british-election-study-internet-panel/
 
 bes_data_subset <- bes_data %>% 
@@ -684,6 +684,24 @@ m_govt_perf_int_know <- lm(govt_perf ~
 
 m_govt_perf_int_know_vcov <- vcovHC(m_govt_perf_int_know)
 
+m_govt_perf_int_cont <- lm(govt_perf ~ 
+                              condition +
+                              contact +
+                              know +
+                              condition:contact +
+                              numeracy +
+                              trust +
+                              age +
+                              gender +
+                              education +
+                              ethnicity_simple +
+                              income_cat +
+                              partisanship +
+                              eu_ref,
+                            data = all_data)
+
+m_govt_perf_int_cont_vcov <- vcovHC(m_govt_perf_int_cont)
+
 m_behavior_int <- lm(behavior ~ 
                        condition +
                        contact +
@@ -1017,15 +1035,18 @@ texreg::texreg(list(m_govt_perf_int_part),
 ```
 
 ```{r tab6, echo=FALSE, results='asis'}
-texreg::texreg(list(m_level_concern_int, # contact,
+texreg::texreg(list(m_govt_perf_int_cont, # contact,
+                    m_level_concern_int, # contact,
                     m_restrict_int_contact), 
                single.row = TRUE, 
                caption = "Interaction effects: Condition x Contact (OLS with robust standard errors)",
                caption.above = TRUE,
-               override.se = list(coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,2],
+               override.se = list(coeftest(m_govt_perf_int_cont, vcov = m_govt_perf_int_cont_vcov)[,2],
+                                  coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,2],
                                   coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,2]),
-               override.pvalues = list(coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,4],
-                                  coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,4]),
+               override.pvalues = list(coeftest(m_govt_perf_int_cont, vcov = m_govt_perf_int_cont_vcov)[,4],
+                                       coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,4],
+                                       coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,4]),
                custom.coef.names = c("(Intercept)", 
                "Cond.: UK-Only", 
                "Cond.: Comparative", 
@@ -1050,7 +1071,7 @@ texreg::texreg(list(m_level_concern_int, # contact,
                "  x Contact",
                "  x Contact"),
                reorder.coef = c(1, 2, 22, 3, 23, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
-               custom.model.names=c("Concern",
+               custom.model.names=c("Gov. support", "Concern",
                             "Supp. restrictions"),
                float.pos = "h!",
                symbol = "\\cdot",
@@ -1062,16 +1083,19 @@ texreg::texreg(list(m_level_concern_int, # contact,
 ```
 
 ```{r tab7, echo=FALSE, results='asis'}
-texreg::texreg(list(m_behavior_int, # know
+texreg::texreg(list(m_govt_perf_int_know, # knowledge
+                    m_behavior_int, # knowledge
                     m_restrict_int_know), 
                single.row = TRUE, 
                caption = "Interaction effects: Condition x Knowledge (OLS with robust standard errors)",
-               custom.model.names=c("Activity",
+               custom.model.names=c("Gov't perf.", "Activity",
                             "Supp. restrictions"),
-              override.se = list(coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,2],
-                                  coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,2]),
-               override.pvalues = list(coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,4],
-                                  coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,4]),
+              override.se = list(coeftest(m_govt_perf_int_know, vcov = m_govt_perf_int_know_vcov)[,2],
+                                 coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,2],
+                                 coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf_int_know, vcov = m_govt_perf_int_know_vcov)[,4],
+                                       coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,4],
+                                       coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,4]),
                caption.above = TRUE,
                custom.coef.names = c("(Intercept)", 
                "Cond.: UK-Only", 
