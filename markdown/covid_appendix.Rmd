@@ -199,7 +199,7 @@ ggplot(manipulation_df, aes(x = condition, y = part))+
 
 Table \ref{tab:tab1a} provides details on the distribution of participants across the three conditions along demographic variables, and Table \ref{tab:tab1b} does the same for for pre-treatment variables. The BES benchmark proportions in the former table are from [Wave 20 of the 2014-2023 British Election Study Internet Panel](https://www.britishelectionstudy.com/data-object/wave-20-of-the-2014-2023-british-election-study-internet-panel/), fielded in June 2020 (N = 31,468), so a month before our survey data was collected. Table \ref{tab:tab2} gives details on the achieved proportion and sample targets by gender and ethnicity.
 
-```{r tab1a, echo=FALSE}
+```{r tab1, echo=FALSE}
 # Set up dataframe for main effects coefficients
 df <- data.frame("row" = 1:21, "coefs" = NA, 
                  "govt_perf_est" = NA, "govt_perf_se" = NA, "govt_perf_p" = NA,
@@ -437,7 +437,7 @@ knitr::kable(summary_df,
              booktabs=TRUE,
              linesep = "",
              escape = FALSE, 
-             label="tab1a",
+             label="tab1",
              col.names = linebreak(c("Control",
                                      "UK-Only\nTreatment",
                                      "Comparative\nTreatment",
@@ -445,7 +445,7 @@ knitr::kable(summary_df,
                                      "BES\nBenchmark"), align = "c"))
 ```
 
-```{r tab1b, echo=FALSE, results='asis'}
+```{r tab2, echo=FALSE, results='asis'}
 contact <- round(tapply(all_data$contact,all_data$condition,mean),2)
 know <- round(tapply(all_data$know,all_data$condition,mean),2)
 trust <- round(tapply(all_data$trust,all_data$condition,mean),2)
@@ -472,14 +472,14 @@ knitr::kable(pretreat_df,
              booktabs=TRUE,
              linesep = "",
              escape = FALSE, 
-             label="tab1b",
+             label="tab2",
              col.names = linebreak(c("Control",
                                      "UK-Only\nTreatment",
                                      "Comparative\nTreatment",
                                      "SD"), align = "c"))
 ```
 
-```{r tab2, echo=FALSE, results='asis'}
+```{r tab3, echo=FALSE, results='asis'}
 sample_achieved <- round(prop.table(table(all_data$ethnicity_simple,all_data$gender))*100,digits=1)
 sample_achieved[1,1] <- paste(sample_achieved[1,1],"(44.0)",sep=" ")
 sample_achieved[2,1] <- paste(sample_achieved[2,1],"(7.0)",sep=" ")
@@ -493,7 +493,7 @@ knitr::kable(data.frame(Ethnicity = c('White', '\\textit{   Target}', 'Other', '
              booktabs=TRUE,
              linesep = "",
              escape = FALSE,
-             label="tab2",
+             label="tab3",
              align=c("l","c","c"))
 ```
 
@@ -629,6 +629,24 @@ m_level_concern_int <- lm(worry ~
                           data = all_data)
 
 m_level_concern_int_vcov <- vcovHC(m_level_concern_int)
+
+m_level_concern_int_know <- lm(worry ~ 
+                                condition +
+                                condition:know +
+                                contact +
+                                know +
+                                numeracy +
+                                trust +
+                                age +
+                                gender +
+                                education +
+                                ethnicity_simple +
+                                income_cat +
+                                partisanship +
+                                eu_ref,
+                              data = all_data)
+
+m_level_concern_int_know_vcov <- vcovHC(m_level_concern_int_know)
 
 m_govt_perf_int_trust <- lm(govt_perf ~ 
                               condition +
@@ -916,14 +934,14 @@ partisan_binary_tbl <- tibble(
   )
 ```
 
-```{r tab3, echo=FALSE, results='asis'}
+```{r tab4, echo=FALSE, results='asis'}
 texreg::texreg(list(m_govt_perf, m_behavior, m_level_concern, m_restrict), 
                single.row = TRUE, 
                caption = "Main effects (OLS with robust standard errors)",
-               custom.model.names=c("Govt. perform.",
+               custom.model.names=c("Gov. Performance",
                                     "Activity",
                                     "Concern",
-                                    "Supp. restrictions"), 
+                                    "Restrictions"), 
                override.se = list(coeftest(m_govt_perf, vcov = m_govt_perf_vcov)[,2],
                                   coeftest(m_behavior, vcov = m_behavior_vcov)[,2],
                                   coeftest(m_level_concern, vcov = m_level_concern_vcov)[,2],
@@ -938,16 +956,16 @@ texreg::texreg(list(m_govt_perf, m_behavior, m_level_concern, m_restrict),
                stars = c(0.001, 0.01, 0.05, 0.1),
                reorder.coef = c(1:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
                custom.coef.names = c("(Intercept)", "Cond.: UK-Only", "Cond.: Comp.", "Contact", "Knowledge", "Numeracy", "Trust", "Age", "Male", "GCSE or below", "Postgraduate", "Undergraduate", "Other ethnicity", "Income > 30k", "Green", "Labour", "Lib Dem", "No party", "Other party", "EU: Did not vote", "EU: Remain"),
-               label="tab3",
+               label="tab4",
                digits=3)
 
 ```
 
-```{r tab4, echo=FALSE, results='asis'}
+```{r tab5, echo=FALSE, results='asis'}
 texreg::texreg(list(m_govt_perf_int_trust), 
                single.row = TRUE, 
                caption = "Interaction effects: Condition x Trust (OLS with robust standard errors)",
-               custom.model.names=c("Govt. perform."),
+               custom.model.names=c("Gov. Performance"),
                override.se = list(coeftest(m_govt_perf_int_trust, vcov = m_govt_perf_int_trust_vcov)[,2]),
                override.pvalues = list(coeftest(m_govt_perf_int_trust, vcov = m_govt_perf_int_trust_vcov)[,4]),
                caption.above = TRUE,
@@ -979,15 +997,15 @@ texreg::texreg(list(m_govt_perf_int_trust),
                symbol = "\\cdot",
                stars = c(0.001, 0.01, 0.05, 0.1),
                scriptsize=TRUE,
-               label="tab4",
+               label="tab5",
                digits=3)
 ```
 
-```{r tab5, echo=FALSE, results='asis'}
+```{r tab6, echo=FALSE, results='asis'}
 texreg::texreg(list(m_govt_perf_int_part), 
                single.row = TRUE, 
                caption = "Interaction effects: Partisanship (OLS with robust standard errors)",
-               custom.model.names=c("Govt. perform."),
+               custom.model.names=c("Gov. Performance"),
                override.se = list(coeftest(m_govt_perf_int_part, vcov = m_govt_perf_int_part_vcov)[,2]),
                override.pvalues = list(coeftest(m_govt_perf_int_part, vcov = m_govt_perf_int_part_vcov)[,4]),
                               custom.coef.names = c("(Intercept)", 
@@ -1030,23 +1048,34 @@ texreg::texreg(list(m_govt_perf_int_part),
                symbol = "\\cdot",
                stars = c(0.001, 0.01, 0.05, 0.1),
                scriptsize=TRUE,
-               label="tab5",
+               label="tab6",
                digits=3)
 ```
 
-```{r tab6, echo=FALSE, results='asis'}
+```{r tab7, echo=FALSE, results='asis'}
 texreg::texreg(list(m_govt_perf_int_cont, # contact,
+                    m_behavior_int_cont, # contact
                     m_level_concern_int, # contact,
                     m_restrict_int_contact), 
                single.row = TRUE, 
                caption = "Interaction effects: Condition x Contact (OLS with robust standard errors)",
                caption.above = TRUE,
-               override.se = list(coeftest(m_govt_perf_int_cont, vcov = m_govt_perf_int_cont_vcov)[,2],
-                                  coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,2],
-                                  coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,2]),
-               override.pvalues = list(coeftest(m_govt_perf_int_cont, vcov = m_govt_perf_int_cont_vcov)[,4],
-                                       coeftest(m_level_concern_int, vcov = m_level_concern_int_vcov)[,4],
-                                       coeftest(m_restrict_int_contact, vcov = m_restrict_int_contact_vcov)[,4]),
+               override.se = list(coeftest(m_govt_perf_int_cont, 
+                                           vcov = m_govt_perf_int_cont_vcov)[,2],
+                                  coeftest(m_behavior_int_cont, 
+                                           vcov = m_behavior_int_cont_vcov)[,2],
+                                  coeftest(m_level_concern_int, 
+                                           vcov = m_level_concern_int_vcov)[,2],
+                                  coeftest(m_restrict_int_contact, 
+                                           vcov = m_restrict_int_contact_vcov)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf_int_cont, 
+                                                vcov = m_govt_perf_int_cont_vcov)[,4],
+                                       coeftest(m_behavior_int_cont, 
+                                                vcov = m_behavior_int_cont_vcov)[,4],
+                                       coeftest(m_level_concern_int, 
+                                                vcov = m_level_concern_int_vcov)[,4],
+                                       coeftest(m_restrict_int_contact, 
+                                                vcov = m_restrict_int_contact_vcov)[,4]),
                custom.coef.names = c("(Intercept)", 
                "Cond.: UK-Only", 
                "Cond.: Comparative", 
@@ -1071,31 +1100,42 @@ texreg::texreg(list(m_govt_perf_int_cont, # contact,
                "  x Contact",
                "  x Contact"),
                reorder.coef = c(1, 2, 22, 3, 23, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
-               custom.model.names=c("Gov. support", "Concern",
-                            "Supp. restrictions"),
+               custom.model.names=c("Gov. Performance", "Activity", "Concern",
+                            "Restrictions"),
                float.pos = "h!",
                symbol = "\\cdot",
                stars = c(0.001, 0.01, 0.05, 0.1),
                scriptsize=TRUE,
-               label="tab6",
+               label="tab7",
                digits=3)
 
 ```
 
-```{r tab7, echo=FALSE, results='asis'}
+```{r tab8, echo=FALSE, results='asis'}
 texreg::texreg(list(m_govt_perf_int_know, # knowledge
                     m_behavior_int, # knowledge
+                    m_level_concern_int_know, # knowledge
                     m_restrict_int_know), 
                single.row = TRUE, 
                caption = "Interaction effects: Condition x Knowledge (OLS with robust standard errors)",
-               custom.model.names=c("Gov't perf.", "Activity",
-                            "Supp. restrictions"),
-              override.se = list(coeftest(m_govt_perf_int_know, vcov = m_govt_perf_int_know_vcov)[,2],
-                                 coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,2],
-                                 coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,2]),
-               override.pvalues = list(coeftest(m_govt_perf_int_know, vcov = m_govt_perf_int_know_vcov)[,4],
-                                       coeftest(m_behavior_int, vcov = m_behavior_int_vcov)[,4],
-                                       coeftest(m_restrict_int_know, vcov = m_restrict_int_know_vcov)[,4]),
+               custom.model.names=c("Gov. Performance", "Activity", "Concern",
+                            "Restrictions"),
+              override.se = list(coeftest(m_govt_perf_int_know, 
+                                          vcov = m_govt_perf_int_know_vcov)[,2],
+                                 coeftest(m_behavior_int, 
+                                          vcov = m_behavior_int_vcov)[,2],
+                                 coeftest(m_level_concern_int_know,
+                                          vcov = m_level_concern_int_know_vcov)[,2],
+                                 coeftest(m_restrict_int_know, 
+                                          vcov = m_restrict_int_know_vcov)[,2]),
+               override.pvalues = list(coeftest(m_govt_perf_int_know, 
+                                                vcov = m_govt_perf_int_know_vcov)[,4],
+                                       coeftest(m_behavior_int, 
+                                                vcov = m_behavior_int_vcov)[,4],
+                                       coeftest(m_level_concern_int_know,
+                                                vcov = m_level_concern_int_know_vcov)[,4],
+                                       coeftest(m_restrict_int_know, 
+                                                vcov = m_restrict_int_know_vcov)[,4]),
                caption.above = TRUE,
                custom.coef.names = c("(Intercept)", 
                "Cond.: UK-Only", 
@@ -1125,11 +1165,11 @@ texreg::texreg(list(m_govt_perf_int_know, # knowledge
                symbol = "\\cdot",
                stars = c(0.001, 0.01, 0.05, 0.1),
                scriptsize=TRUE,
-               label="tab7",
+               label="tab8",
                digits=3)
 ```
 
-```{r tab8, echo=FALSE, results='asis'}
+```{r tab9, echo=FALSE, results='asis'}
 texreg::texreg(list(m_restrict_glm, m_restrict_int_know_glm, m_restrict_int_contact_glm), 
                single.row = TRUE, 
                caption = "Support for restrictions (logistic models with robust standard errors)",
@@ -1172,18 +1212,18 @@ texreg::texreg(list(m_restrict_glm, m_restrict_int_know_glm, m_restrict_int_cont
                "  x Contact",
                "  x Contact"),
                reorder.coef = c(1, 2, 22, 24, 3, 23, 25, 4:10, 12, 11, 13, 14, 18, 17, 16, 15, 19, 20, 21),
-               label="tab8",
+               label="tab9",
                digits=3)
 ```
 
-```{r tab9, echo=FALSE, results='asis'}
+```{r tab10, echo=FALSE, results='asis'}
 texreg::texreg(list(m_govt_perf_0, m_behavior_0, m_level_concern_0, m_restrict_0), 
                single.row = TRUE, 
                caption = "Main effects without covariates (OLS with robust standard errors)",
-               custom.model.names=c("Govt. perform.",
+               custom.model.names=c("Gov. Performance",
                                     "Activity",
                                     "Concern",
-                                    "Supp. restrictions"), 
+                                    "Restrictions"), 
                override.se = list(coeftest(m_govt_perf_0, vcov = m_govt_perf_vcov_0)[,2],
                                   coeftest(m_behavior_0, vcov = m_behavior_vcov_0)[,2],
                                   coeftest(m_level_concern_0, vcov = m_level_concern_vcov_0)[,2],
@@ -1198,7 +1238,7 @@ texreg::texreg(list(m_govt_perf_0, m_behavior_0, m_level_concern_0, m_restrict_0
                stars = c(0.001, 0.01, 0.05, 0.1),
                custom.coef.names = c("(Intercept)", "Cond.: UK-Only", "Cond.: 
                                      Comp."),
-               label="tab9",
+               label="tab10",
                digits=3)
 ```
 
